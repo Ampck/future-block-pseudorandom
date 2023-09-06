@@ -1,7 +1,7 @@
 {
   "name": "future-block-pseudorandom",
   "version": "1.0.0",
-  "description": "",
+  "description": "This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.3.0",
@@ -41,6 +41,18 @@
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^1.0.2",
-    "hardhat": "^2.10.1"
-  }
+    "hardhat": "^2.17.2"
+  },
+  "main": "hardhat.config.js",
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ampck/future-block-pseudorandom.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Ampck/future-block-pseudorandom/issues"
+  },
+  "homepage": "https://github.com/Ampck/future-block-pseudorandom#readme"
 }
