@@ -1,13 +1,6 @@
-# Sample Hardhat Project
+Future Block Pseudorandom
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+This project includes a pseudorandom number generator compatible with all EVM compatible blockchains.
 
-Try running some of the following tasks:
-
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.js
-```
+The following demonstration applications are also provided:
+- Coin Flip
