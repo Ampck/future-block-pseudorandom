@@ -138,6 +138,8 @@ contract CoinFlip is Random {
 		games[_id].challenger = msg.sender;
 		games[_id].blockAccepted = block.number;
 		games[_id].status = 1; //Set status to pending
+
+		stats[games[_id].creator].activeGames--;
 	}
 
 	function finalizeGame
@@ -145,13 +147,21 @@ contract CoinFlip is Random {
 		public
 	{
 		require(games[_id].status == 1, "Game status is not pending...");
-		require(
-			block.number
-			>
-			(games[_id].blockAccepted + completionDelay)
-		);
+		uint256 finishedBlock = games[_id].blockAccepted + completionDelay;
+		require(block.number > finishedBlock);
 
 		//PERFORM RANDOM AND SET WINNER
+		uint256 winner = _random(finishedBlock);
+		require((winner == 0 || winner == 1), "Random winner result not within expect bounds...");
+		if (winner == 0) {
+			games[_id].winner = games[_id].creator;
+			stats[games[_id].creator].wins++;
+			stats[games[_id].challenger].losses++;
+		} else if (winner == 1) {
+			games[_id].winner = games[_id].challenger;
+			stats[games[_id].challenger].wins++;
+			stats[games[_id].creator].losses++;
+		}
 
 		uint256 pot = games[_id].wager * 2;
 		uint256 fee = pot * (feeNumerator / feeDenominator);
@@ -159,6 +169,7 @@ contract CoinFlip is Random {
 		(bool sent, ) = games[_id].winner.call{value: payout}("");
 		require(sent, "ETH not sent to winner...");
 
+		games[_id].completionTime = block.timestamp;
 		games[_id].status = 2; //set game status to completed
 	}
 
