@@ -12,7 +12,7 @@ describe('CoinFlip', () => {
     
     beforeEach(async () => {
         const CF = await ethers.getContractFactory('CoinFlip')
-        cf = await CF.deploy(3600, 1, 33, 1) //1 hr, 3%, 1 wei
+        cf = await CF.deploy(3600, 10, 1, 33, 1) //1 hr, 10 blocks, 3%, 1 wei
 
         accounts = await ethers.getSigners()
         emptyAddress = '0x0000000000000000000000000000000000000000'

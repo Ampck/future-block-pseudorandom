@@ -10,6 +10,8 @@ contract CoinFlip is Random {
 	//Global Info
 	uint256 public gameLifetime;
 		//Number of seconds until a game request expires
+	uint256 public completionDelay;
+		//Number of blocks between challenger accepting and finalization opening
 	uint256 public minimumBet;
 	uint256 public maxActiveGames;
 		//Maximum active games a single user can have at once, set to 0 for infinite
@@ -60,14 +62,16 @@ contract CoinFlip is Random {
 
 	constructor
 		(uint256 _gameLifetime,
+		uint256 _completionDelay,
+		uint256 _minimumBet,
 		uint256 _feeNumerator,
-		uint256 _feeDenominator,
-		uint256 _minimumBet)
+		uint256 _feeDenominator)
 	{
 		gameLifetime = _gameLifetime;
+		completionDelay = _completionDelay;
+		minimumBet = _minimumBet;
 		feeNumerator = _feeNumerator;
 		feeDenominator = _feeDenominator;
-		minimumBet = _minimumBet;
 		totalGames = 0;
 	}
 
@@ -75,8 +79,7 @@ contract CoinFlip is Random {
 
 	//Publicly Accessible Functions
 
-	function createGame_ETH
-		(uint256 _wager)
+	function createGame_ETH()
 		public
 		payable
 		returns(uint256)
@@ -89,7 +92,7 @@ contract CoinFlip is Random {
 			(maxActiveGames == 0),
 			"User has too many active games..."
 		);
-		require(msg.value >= minimumBet, "Wager is less than minimum bet");
+		require(msg.value >= minimumBet, "Wager is less than minimum bet...");
 
 		//setup game
 		totalGames++;
@@ -113,6 +116,7 @@ contract CoinFlip is Random {
 		return totalGames; //return id of game
 	}
 
+/*
 	function createGame_ERC20
 		(uint256 _wager,
 		address _erc20Address)
@@ -121,14 +125,43 @@ contract CoinFlip is Random {
 	{
 		return 0;
 	}
-/*
+*/
+
 	function acceptGame
 		(uint256 _id)
 		public
+		payable
 	{
+		require(games[_id].creator != msg.sender, "Challenger can not be creator...");
+		require(msg.value >= games[_id].wager, "Sent ETH is less than wager...");
 
+		games[_id].challenger = msg.sender;
+		games[_id].blockAccepted = block.number;
+		games[_id].status = 1; //Set status to pending
 	}
-*/
+
+	function finalizeGame
+		(uint256 _id)
+		public
+	{
+		require(games[_id].status == 1, "Game status is not pending...");
+		require(
+			block.number
+			>
+			(games[_id].blockAccepted + completionDelay)
+		);
+
+		//PERFORM RANDOM AND SET WINNER
+
+		uint256 pot = games[_id].wager * 2;
+		uint256 fee = pot * (feeNumerator / feeDenominator);
+		uint256 payout = pot - fee;
+		(bool sent, ) = games[_id].winner.call{value: payout}("");
+		require(sent, "ETH not sent to winner...");
+
+		games[_id].status = 2; //set game status to completed
+	}
+
 	function cancelGame
 		(uint256 _id)
 		public
