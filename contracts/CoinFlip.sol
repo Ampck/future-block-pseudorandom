@@ -8,6 +8,9 @@ import "./Random.sol";
 contract CoinFlip is Random {
 
 	//Global Info
+	uint256 public feeBalance;
+		//The total amount of fees (in wei) that belong to the house but have
+		//not yet left the contract
 	uint256 public gameLifetime;
 		//Number of seconds until a game request expires
 	uint256 public completionDelay;
@@ -25,8 +28,6 @@ contract CoinFlip is Random {
 			//total fee = 3%
 	uint256 public totalGames;
 		//Total number of games created
-
-
 
 	//Custom Data Structures
 
@@ -58,8 +59,6 @@ contract CoinFlip is Random {
     }
 	mapping(address => Stats) public stats;
 
-
-
 	constructor
 		(uint256 _gameLifetime,
 		uint256 _completionDelay,
@@ -72,10 +71,9 @@ contract CoinFlip is Random {
 		minimumBet = _minimumBet;
 		feeNumerator = _feeNumerator;
 		feeDenominator = _feeDenominator;
+		feeBalance = 0;
 		totalGames = 0;
 	}
-
-
 
 	//Publicly Accessible Functions
 
@@ -148,11 +146,13 @@ contract CoinFlip is Random {
 	{
 		require(games[_id].status == 1, "Game status is not pending...");
 		uint256 finishedBlock = games[_id].blockAccepted + completionDelay;
-		require(block.number > finishedBlock);
+		require(block.number > finishedBlock, "Game can not yet be finalized...");
 
-		//PERFORM RANDOM AND SET WINNER
+		//Retrieve random number and set winner
 		uint256 winner = _random(finishedBlock);
 		require((winner == 0 || winner == 1), "Random winner result not within expect bounds...");
+		
+		//Updates user statistics and winner of current game
 		if (winner == 0) {
 			games[_id].winner = games[_id].creator;
 			stats[games[_id].creator].wins++;
@@ -163,12 +163,16 @@ contract CoinFlip is Random {
 			stats[games[_id].creator].losses++;
 		}
 
+		//Calculate house fee and winner payout
 		uint256 pot = games[_id].wager * 2;
 		uint256 fee = pot * (feeNumerator / feeDenominator);
 		uint256 payout = pot - fee;
+		feeBalance += fee; //Add fee to house fee balance
+		//Send payout to winner
 		(bool sent, ) = games[_id].winner.call{value: payout}("");
 		require(sent, "ETH not sent to winner...");
 
+		//Update state of game with further details
 		games[_id].completionTime = block.timestamp;
 		games[_id].status = 2; //set game status to completed
 	}
@@ -183,8 +187,6 @@ contract CoinFlip is Random {
 		stats[msg.sender].activeGames--; //decrease number of active games for user
 		games[_id].status = 3; //set game status to cancelled
 	}
-
-
 
 	//Internal Utility Functions
 
