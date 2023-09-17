@@ -16,7 +16,7 @@ contract CoinFlip is Random {
 	uint256 public completionDelay;
 		//Number of blocks between challenger accepting and finalization opening
 	uint256 public minimumBet;
-	uint256 public maxActiveGames;
+	//uint256 public maxActiveGames;
 		//Maximum active games a single user can have at once, set to 0 for infinite
 	uint256 public feeNumerator;
 	uint256 public feeDenominator;
@@ -28,6 +28,8 @@ contract CoinFlip is Random {
 			//total fee = 3%
 	uint256 public totalGames;
 		//Total number of games created
+	uint256 public totalWinnings;
+		//Total profits payed out to winners
 
 	//Custom Data Structures
 
@@ -47,15 +49,18 @@ contract CoinFlip is Random {
         	//1 = accepted
         	//2 = completed
         	//3 = cancelled
+        	//4 = expired
     }
     mapping(uint256 => Game) public games;
 
     struct Stats {
     	uint256 wins; //number of wins
     	uint256 losses; //number of losses
-    	uint256 activeGames; //number of active games created by given user
+    	//uint256 activeGames; //number of active games created by given user
     	uint256 totalUserGames; //number of total games ever created by given user
     	mapping(uint256 => uint256) userGameIds; //ids of all games created by user
+    	uint256 totalUserAcceptedGames; //number of total games ever accepted by given user
+    	mapping(uint256 => uint256) userAcceptedGameIds; //ids of all games accepted by user
     }
 	mapping(address => Stats) public stats;
 
@@ -73,6 +78,7 @@ contract CoinFlip is Random {
 		feeDenominator = _feeDenominator;
 		feeBalance = 0;
 		totalGames = 0;
+		totalWinnings = 0;
 	}
 
 	//Publicly Accessible Functions
@@ -84,12 +90,14 @@ contract CoinFlip is Random {
 	{
 		
 		//requirements
+		/*
 		require(
 			(stats[msg.sender].activeGames <= maxActiveGames)
 			||
 			(maxActiveGames == 0),
 			"User has too many active games..."
 		);
+		*/
 		require(msg.value >= minimumBet, "Wager is less than minimum bet...");
 
 		//setup game
@@ -103,7 +111,7 @@ contract CoinFlip is Random {
 		games[totalGames].status = 0; //redundant state change for safety
 
 		//update data
-		stats[msg.sender].activeGames++;
+		//stats[msg.sender].activeGames++;
 		stats[msg.sender].totalUserGames++;
 		stats[msg.sender]
 			.userGameIds[
@@ -132,12 +140,13 @@ contract CoinFlip is Random {
 	{
 		require(games[_id].creator != msg.sender, "Challenger can not be creator...");
 		require(msg.value >= games[_id].wager, "Sent ETH is less than wager...");
+		require(_checkExpired(_id), "Game is expired...");
 
 		games[_id].challenger = msg.sender;
 		games[_id].blockAccepted = block.number;
 		games[_id].status = 1; //Set status to pending
 
-		stats[games[_id].creator].activeGames--;
+		//stats[games[_id].creator].activeGames--;
 	}
 
 	function finalizeGame
@@ -168,6 +177,7 @@ contract CoinFlip is Random {
 		uint256 fee = pot * (feeNumerator / feeDenominator);
 		uint256 payout = pot - fee;
 		feeBalance += fee; //Add fee to house fee balance
+		totalWinnings += pot; //Add pot to global totla winnings
 		//Send payout to winner
 		(bool sent, ) = games[_id].winner.call{value: payout}("");
 		require(sent, "ETH not sent to winner...");
@@ -183,9 +193,18 @@ contract CoinFlip is Random {
 	{
 		require(games[_id].creator == msg.sender, "Attempted to cancel game without ownership...");
 		require(_checkActive(_id), "Game is already pending or inactive...");
-		
-		stats[msg.sender].activeGames--; //decrease number of active games for user
-		games[_id].status = 3; //set game status to cancelled
+
+		//return wager
+		(bool sent, ) = games[_id].creator.call{value: games[_id].wager}("");
+		require(sent, "ETH not returned to winner...");
+
+		if (_checkExpired(_id)) {
+			games[_id].status = 4; //set game status to expired
+		} else {
+			games[_id].status = 3; //set game status to cancelled
+		}
+
+		//stats[msg.sender].activeGames--; //decrease number of active games for user
 	}
 
 	//Internal Utility Functions
@@ -196,7 +215,7 @@ contract CoinFlip is Random {
 		internal
 		returns(bool)
 	{
-		return(games[_id].status == 0 && !_checkExpired(_id));
+		return(games[_id].status == 0);
 	}
 
 	function _checkExpired
