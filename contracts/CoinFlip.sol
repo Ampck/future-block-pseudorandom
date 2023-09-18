@@ -45,11 +45,12 @@ contract CoinFlip is Random {
         uint256 completionTime; //unix time (seconds) when completed and paid out
         uint256 blockAccepted; //block number when challenger accepted
         uint256 status;
-        	//0 = active
-        	//1 = accepted
-        	//2 = completed
-        	//3 = cancelled
-        	//4 = expired
+        	//0 = null
+        	//1 = active
+        	//2 = accepted
+        	//3 = completed
+        	//4 = cancelled
+        	//5 = expired
     }
     mapping(uint256 => Game) public games;
 
@@ -102,13 +103,14 @@ contract CoinFlip is Random {
 
 		//setup game
 		totalGames++;
+		games[totalGames].id = totalGames;
 		games[totalGames].creator = msg.sender;
 		games[totalGames].wager = msg.value;
 		games[totalGames].erc20 = false; //redundant state change for safety
 		games[totalGames].creationTime = block.timestamp;
 			//This timestamp is early by one block, but this minor
 			//innaccuracy does not hurt performance
-		games[totalGames].status = 0; //redundant state change for safety
+		games[totalGames].status = 1; //set game to active
 
 		//update data
 		//stats[msg.sender].activeGames++;
@@ -140,11 +142,19 @@ contract CoinFlip is Random {
 	{
 		require(games[_id].creator != msg.sender, "Challenger can not be creator...");
 		require(msg.value >= games[_id].wager, "Sent ETH is less than wager...");
-		require(_checkExpired(_id), "Game is expired...");
+		require(_checkActive(_id), "Game is not active...");
+		require(!_checkExpired(_id), "Game is expired...");
 
+		//send back extra eth
+		uint256 diff = msg.value - games[_id].wager;
+		if (diff > 0) {
+			(bool sent, ) = msg.sender.call{value: diff}("");
+			require(sent, "Extra ETH not sent back to challenger");
+		}
+		
 		games[_id].challenger = msg.sender;
 		games[_id].blockAccepted = block.number;
-		games[_id].status = 1; //Set status to pending
+		games[_id].status = 2; //Set status to pending
 
 		//stats[games[_id].creator].activeGames--;
 	}
@@ -153,12 +163,12 @@ contract CoinFlip is Random {
 		(uint256 _id)
 		public
 	{
-		require(games[_id].status == 1, "Game status is not pending...");
+		require(games[_id].status == 2, "Game status is not pending...");
 		uint256 finishedBlock = games[_id].blockAccepted + completionDelay;
 		require(block.number > finishedBlock, "Game can not yet be finalized...");
 
 		//Retrieve random number and set winner
-		uint256 winner = _random(finishedBlock);
+		uint256 winner = _random(finishedBlock) % 2;
 		require((winner == 0 || winner == 1), "Random winner result not within expect bounds...");
 		
 		//Updates user statistics and winner of current game
@@ -184,7 +194,7 @@ contract CoinFlip is Random {
 
 		//Update state of game with further details
 		games[_id].completionTime = block.timestamp;
-		games[_id].status = 2; //set game status to completed
+		games[_id].status = 3; //set game status to completed
 	}
 
 	function cancelGame
@@ -199,9 +209,9 @@ contract CoinFlip is Random {
 		require(sent, "ETH not returned to winner...");
 
 		if (_checkExpired(_id)) {
-			games[_id].status = 4; //set game status to expired
+			games[_id].status = 5; //set game status to expired
 		} else {
-			games[_id].status = 3; //set game status to cancelled
+			games[_id].status = 4; //set game status to cancelled
 		}
 
 		//stats[msg.sender].activeGames--; //decrease number of active games for user
@@ -215,7 +225,7 @@ contract CoinFlip is Random {
 		internal
 		returns(bool)
 	{
-		return(games[_id].status == 0);
+		return(games[_id].status == 1);
 	}
 
 	function _checkExpired
