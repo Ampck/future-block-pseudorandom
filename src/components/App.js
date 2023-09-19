@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Container } from 'react-bootstrap'
+import { Container, Row, Col } from 'react-bootstrap'
 import { ethers } from 'ethers'
 
 // Components
@@ -16,6 +16,7 @@ const NETWORK_ID = 31337;
 
 function App() {
   const [account, setAccount] = useState(null)
+  const [accountString, setAccountString] = useState(null)
   const [coinflip, setCoinflip] = useState(null)
   const [provider, setProvider] = useState(null)
 
@@ -32,6 +33,7 @@ function App() {
     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
     const account = ethers.utils.getAddress(accounts[0])
     setAccount(account)
+    setAccountString(account.toString().slice(0,7))
 
     setIsLoading(false)
   }
@@ -43,18 +45,25 @@ function App() {
   }, [isLoading]);
 
   return(
-    <Container>
-      <Navigation account={account} />
-
-      <h1 className='my-4 text-center'>Defi-Dice</h1>
-      <hr/>
-      {isLoading ? (
-        <Loading />
-      ) : (
-        <>
-        </>
-      )}
-    </Container>
+    <>
+    <div style={{flex: 1, flexDirection: 'column', background: 'gray'}}>
+      <Navigation account={account} accountString={accountString}/>
+      <Container style={{background: 'red', textAlignVertical: 'center'}}>
+        {isLoading ? (
+          <Loading />
+        ) : (
+          <Row className="text-center" style={{background: 'blue', height: '100%'}}>
+            <Col style={{background: 'blue', height: '100%'}}>
+              test
+            </Col>
+            <Col style={{background: 'green'}}>
+              test2
+            </Col>
+          </Row>
+        )}
+      </Container>
+    </div>
+    </>
   )
 }
 
