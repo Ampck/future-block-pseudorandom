@@ -1,7 +1,7 @@
 {
-  "name": "future-block-pseudorandom",
+  "name": "dao",
   "version": "1.0.0",
-  "description": "This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.",
+  "description": "",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.3.0",
@@ -10,7 +10,7 @@
     "react": "^18.2.0",
     "react-bootstrap": "^2.4.0",
     "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
+    "react-scripts": "^5.0.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -19,7 +19,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
-  "author": "gregory@dappuniversity.com",
+  "author": "",
   "license": "ISC",
   "eslintConfig": {
     "extends": [
@@ -41,18 +41,6 @@
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^1.0.2",
-    "hardhat": "^2.17.2"
-  },
-  "main": "hardhat.config.js",
-  "directories": {
-    "test": "test"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Ampck/future-block-pseudorandom.git"
-  },
-  "bugs": {
-    "url": "https://github.com/Ampck/future-block-pseudorandom/issues"
-  },
-  "homepage": "https://github.com/Ampck/future-block-pseudorandom#readme"
+    "hardhat": "^2.17.3"
+  }
 }
