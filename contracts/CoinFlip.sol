@@ -11,7 +11,7 @@ contract CoinFlip is Random {
 	uint256 public feeBalance;
 		//The total amount of fees (in wei) that belong to the house but have
 		//not yet left the contract
-	uint256 public gameLifetime;
+	//uint256 public gameLifetime;
 		//Number of seconds until a game request expires
 	uint256 public completionDelay;
 		//Number of blocks between challenger accepting and finalization opening
@@ -23,9 +23,9 @@ contract CoinFlip is Random {
 		//Winner's profit is multiplied by (feeNumerator/feeDenominator)
 		//This amount is taken by contract as fee
 		//EXAMPLE:
-			//feeNumerator = 3;
-			//feeDenomiator = 100;
-			//total fee = 3%
+			//feeNumerator = 291;
+			//feeDenomiator = 10000;
+			//total fee = 2.91%
 	uint256 public totalGames;
 		//Total number of games created
 	uint256 public totalWinnings;
@@ -57,7 +57,7 @@ contract CoinFlip is Random {
     struct Stats {
     	uint256 wins; //number of wins
     	uint256 losses; //number of losses
-    	//uint256 activeGames; //number of active games created by given user
+    	uint256 activeGames; //number of active games created by given user
     	uint256 totalUserGames; //number of total games ever created by given user
     	mapping(uint256 => uint256) userGameIds; //ids of all games created by user
     	uint256 totalUserAcceptedGames; //number of total games ever accepted by given user
@@ -66,13 +66,13 @@ contract CoinFlip is Random {
 	mapping(address => Stats) public stats;
 
 	constructor
-		(uint256 _gameLifetime,
+		(/*uint256 _gameLifetime,*/
 		uint256 _completionDelay,
 		uint256 _minimumBet,
 		uint256 _feeNumerator,
 		uint256 _feeDenominator)
 	{
-		gameLifetime = _gameLifetime;
+		//gameLifetime = _gameLifetime;
 		completionDelay = _completionDelay;
 		minimumBet = _minimumBet;
 		feeNumerator = _feeNumerator;
@@ -82,12 +82,37 @@ contract CoinFlip is Random {
 		totalWinnings = 0;
 	}
 
+	//Events
+
+	event CreateGame(
+		uint256 id,
+		address creator,
+		uint256 wager,
+		bool erc20,
+		uint256 creationTime
+	);
+
+	event AcceptGame(
+		uint256 id,
+		address challenger,
+		uint256 blockAccepted
+	);
+
+	event CancelGame(
+		uint256 id
+	);
+
+	event FinalizeGame(
+		uint256 id,
+		address winner,
+		uint256 completionTime
+	);
+
 	//Publicly Accessible Functions
 
 	function createGame_ETH()
 		public
 		payable
-		returns(uint256)
 	{
 		
 		//requirements
@@ -113,7 +138,7 @@ contract CoinFlip is Random {
 		games[totalGames].status = 1; //set game to active
 
 		//update data
-		//stats[msg.sender].activeGames++;
+		stats[msg.sender].activeGames++;
 		stats[msg.sender].totalUserGames++;
 		stats[msg.sender]
 			.userGameIds[
@@ -121,7 +146,14 @@ contract CoinFlip is Random {
 				totalUserGames
 			] = totalGames;
 			//Set latest game in user stats to this game
-		return totalGames; //return id of game
+
+		emit CreateGame(
+			games[totalGames].id,
+			games[totalGames].creator,
+			games[totalGames].wager,
+			games[totalGames].erc20,
+			games[totalGames].creationTime
+		);
 	}
 
 /*
@@ -143,20 +175,26 @@ contract CoinFlip is Random {
 		require(games[_id].creator != msg.sender, "Challenger can not be creator...");
 		require(msg.value >= games[_id].wager, "Sent ETH is less than wager...");
 		require(_checkActive(_id), "Game is not active...");
-		require(!_checkExpired(_id), "Game is expired...");
+		//require(!_checkExpired(_id), "Game is expired...");
 
-		//send back extra eth
+		//Send excess ETH back to challenger
 		uint256 diff = msg.value - games[_id].wager;
 		if (diff > 0) {
 			(bool sent, ) = msg.sender.call{value: diff}("");
-			require(sent, "Extra ETH not sent back to challenger");
+			require(sent, "Exces ETH not sent back to challenger");
 		}
 		
 		games[_id].challenger = msg.sender;
 		games[_id].blockAccepted = block.number;
 		games[_id].status = 2; //Set status to pending
 
-		//stats[games[_id].creator].activeGames--;
+		stats[games[_id].creator].activeGames--;
+
+		emit AcceptGame(
+			_id,
+			games[_id].challenger,
+			games[_id].blockAccepted
+		);
 	}
 
 	function finalizeGame
@@ -184,7 +222,7 @@ contract CoinFlip is Random {
 
 		//Calculate house fee and winner payout
 		uint256 pot = games[_id].wager * 2;
-		uint256 fee = pot * (feeNumerator / feeDenominator);
+		uint256 fee = (pot * feeNumerator) / feeDenominator;
 		uint256 payout = pot - fee;
 		feeBalance += fee; //Add fee to house fee balance
 		totalWinnings += pot; //Add pot to global totla winnings
@@ -204,17 +242,38 @@ contract CoinFlip is Random {
 		require(games[_id].creator == msg.sender, "Attempted to cancel game without ownership...");
 		require(_checkActive(_id), "Game is already pending or inactive...");
 
-		//return wager
+		//Return wager to creator
 		(bool sent, ) = games[_id].creator.call{value: games[_id].wager}("");
-		require(sent, "ETH not returned to winner...");
+		require(sent, "ETH not returned to creator...");
 
+		/*
 		if (_checkExpired(_id)) {
 			games[_id].status = 5; //set game status to expired
 		} else {
 			games[_id].status = 4; //set game status to cancelled
 		}
+		*/
 
-		//stats[msg.sender].activeGames--; //decrease number of active games for user
+		games[_id].status = 4;//set game status to cancelled
+
+		stats[msg.sender].activeGames--; //decrease number of active games for user
+	}
+
+	function cancelAllGames()
+		public
+	{
+		require(stats[msg.sender].activeGames > 0, "User has no active games to cancel...");
+
+    	uint256 _totalUserGames = stats[msg.sender].totalUserGames;
+    	//mapping(uint256 => uint256) userGameIds; //ids of all games created by user
+
+		while (stats[msg.sender].activeGames > 0) {
+			if (games[stats[msg.sender].userGameIds[_totalUserGames]].status == 0) {
+				cancelGame(stats[msg.sender].userGameIds[_totalUserGames]);
+			}
+			_totalUserGames--;
+		}
+
 	}
 
 	//Internal Utility Functions
@@ -228,6 +287,7 @@ contract CoinFlip is Random {
 		return(games[_id].status == 1);
 	}
 
+/*
 	function _checkExpired
 		(uint256 _id)
 		view
@@ -236,5 +296,6 @@ contract CoinFlip is Random {
 	{
 		return(block.timestamp > (games[_id].creationTime + gameLifetime));
 	}
+*/
 
 }

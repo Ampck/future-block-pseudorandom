@@ -5,7 +5,8 @@ import logo from '../logo.png';
 
 const Navigation = ({ account, accountString }) => {
   return (
-    <div style={{padding: '7px 0px 7px 0px', background:'black', display: 'block', width: '100vw'}}>
+    <div style={{padding: '7px 0px 7px 0px', background:'black', display: 'block', width: '100vw'
+  }}>
       <Navbar className='text-center' style={{margin:'0px 10% 0px 10%', color:'white'}}>
         <div style={{width: '10%'}}>
           <img
