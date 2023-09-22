@@ -8,6 +8,8 @@ import "./Random.sol";
 contract CoinFlip is Random {
 
 	//Global Info
+
+	address public owner;
 	uint256 public feeBalance;
 		//The total amount of fees (in wei) that belong to the house but have
 		//not yet left the contract
@@ -31,7 +33,7 @@ contract CoinFlip is Random {
 	uint256 public totalWinnings;
 		//Total profits payed out to winners
 
-	//Custom Data Structures
+	//Data Structures
 
 	struct Game {
         uint256 id; //id of game
@@ -72,6 +74,7 @@ contract CoinFlip is Random {
 		uint256 _feeNumerator,
 		uint256 _feeDenominator)
 	{
+		owner = msg.sender;
 		//gameLifetime = _gameLifetime;
 		completionDelay = _completionDelay;
 		minimumBet = _minimumBet;
@@ -80,6 +83,13 @@ contract CoinFlip is Random {
 		feeBalance = 0;
 		totalGames = 0;
 		totalWinnings = 0;
+	}
+
+	//Function Modifiers
+
+	modifier onlyOwner() {
+		require(msg.sender == owner);
+		_;
 	}
 
 	//Events
@@ -106,6 +116,11 @@ contract CoinFlip is Random {
 		uint256 id,
 		address winner,
 		uint256 completionTime
+	);
+
+	event UpdateFee(
+		uint256 feeNumerator,
+		uint256 feeDenominator
 	);
 
 	//Publicly Accessible Functions
@@ -274,6 +289,20 @@ contract CoinFlip is Random {
 			_totalUserGames--;
 		}
 
+	}
+
+	//Admin Functions
+
+	function updateFee
+		(uint256 _feeNumerator,
+		uint256 _feeDenominator)
+		public
+		onlyOwner
+	{
+		feeNumerator = _feeNumerator;
+		feeDenominator = _feeDenominator;
+
+		emit UpdateFee(feeNumerator, feeDenominator);
 	}
 
 	//Internal Utility Functions
