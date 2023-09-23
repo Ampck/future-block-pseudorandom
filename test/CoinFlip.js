@@ -201,38 +201,31 @@ describe('CoinFlip', () => {
                 expect((await coinflip.stats(creator.address)).activeGames).to.equal(0)
             })
 
-            it('Sends creator initial wager', async () => {
+            it('Sends initial wager back to creator', async () => {
 
                 expect(await ethers.provider.getBalance(coinflip.address)).to.equal(0)
             })
             
             it('Emits a CancelGame event', async () => {
-                await expect(transaction).to.emit(coinflip, 'Cancel').
+                await expect(transaction).to.emit(coinflip, 'CancelGame').
                     withArgs(1)
             })
         })
         describe('Failure', () => {
-            it('Reverts if challenger is creator', async () => {
+            it('Reverts if canceller is not creator', async () => {
                 transaction = await coinflip.connect(creator).createGame_ETH({value: MINIMUM_BET});
                 result = await transaction.wait()
 
-                await expect(coinflip.connect(creator).acceptGame(1, {value: (MINIMUM_BET)})).to.be.reverted
+                await expect(coinflip.connect(challenger).cancelGame(1)).to.be.reverted
             })
-            it('Reverts if transaction value is less than wager', async () => {
+            it('Reverts if game is no longer active', async () => {
                 transaction = await coinflip.connect(creator).createGame_ETH({value: MINIMUM_BET});
                 result = await transaction.wait()
 
-                await expect(coinflip.connect(challenger).acceptGame(1, {value: (MINIMUM_BET - 1)})).to.be.reverted
-            })
-            it('Reverts if game is not active', async () => {
-                transaction = await coinflip.connect(creator).createGame_ETH({value: MINIMUM_BET});
-                result = await transaction.wait()
-                transaction = await coinflip.connect(challenger).acceptGame(1, {value: (MINIMUM_BET)})
-                result = await transaction.wait()
-                blockAccepted = await result.blockNumber
-                await expect(transaction).to.emit(coinflip, 'AcceptGame').
-                    withArgs(1, challenger.address, blockAccepted)
-                await expect(coinflip.connect(finalizer).acceptGame(1, {value: (MINIMUM_BET)})).to.be.reverted
+                transaction = await coinflip.connect(challenger).acceptGame(1, {value: MINIMUM_BET})
+                result = transaction.wait()
+
+                await expect(coinflip.connect(creator).cancelGame(1)).to.be.reverted
             })
         })
     })
