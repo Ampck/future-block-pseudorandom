@@ -149,10 +149,66 @@ describe('CoinFlip', () => {
             it('Sends challenger excess balance', async () => {
                 expect(await ethers.provider.getBalance(challenger.address)).to.greaterThan(ethers.utils.parseUnits("9999"))
             })
-            
+
             it('Emits a AcceptGame event', async () => {
                 await expect(transaction).to.emit(coinflip, 'AcceptGame').
                     withArgs(1, challenger.address, blockAccepted)
+            })
+        })
+        describe('Failure', () => {
+            it('Reverts if challenger is creator', async () => {
+                transaction = await coinflip.connect(creator).createGame_ETH({value: MINIMUM_BET});
+                result = await transaction.wait()
+
+                await expect(coinflip.connect(creator).acceptGame(1, {value: (MINIMUM_BET)})).to.be.reverted
+            })
+            it('Reverts if transaction value is less than wager', async () => {
+                transaction = await coinflip.connect(creator).createGame_ETH({value: MINIMUM_BET});
+                result = await transaction.wait()
+
+                await expect(coinflip.connect(challenger).acceptGame(1, {value: (MINIMUM_BET - 1)})).to.be.reverted
+            })
+            it('Reverts if game is not active', async () => {
+                transaction = await coinflip.connect(creator).createGame_ETH({value: MINIMUM_BET});
+                result = await transaction.wait()
+                transaction = await coinflip.connect(challenger).acceptGame(1, {value: (MINIMUM_BET)})
+                result = await transaction.wait()
+                blockAccepted = await result.blockNumber
+                await expect(transaction).to.emit(coinflip, 'AcceptGame').
+                    withArgs(1, challenger.address, blockAccepted)
+                await expect(coinflip.connect(finalizer).acceptGame(1, {value: (MINIMUM_BET)})).to.be.reverted
+            })
+        })
+    })
+
+    describe('Cancels Game', () => {
+        let transaction,
+            result
+        describe('Success', () => {
+            beforeEach(async () => {
+                transaction = await coinflip.connect(creator).createGame_ETH({value: MINIMUM_BET});
+                result = await transaction.wait()
+
+                transaction = await coinflip.connect(creator).cancelGame(1);
+                result = await transaction.wait()
+            })
+
+            it('Status of game with id "1" becomes "4"', async () => {
+                expect((await coinflip.games(1)).status).to.equal(4)
+            })
+
+            it('"activeGames" stat of creator becomes "0"', async () => {
+                expect((await coinflip.stats(creator.address)).activeGames).to.equal(0)
+            })
+
+            it('Sends creator initial wager', async () => {
+
+                expect(await ethers.provider.getBalance(coinflip.address)).to.equal(0)
+            })
+            
+            it('Emits a CancelGame event', async () => {
+                await expect(transaction).to.emit(coinflip, 'Cancel').
+                    withArgs(1)
             })
         })
         describe('Failure', () => {
