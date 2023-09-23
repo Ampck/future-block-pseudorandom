@@ -23,7 +23,7 @@ contract Random {
             uint256(keccak256(abi.encodePacked((((_uint256SeedFromBlock(_blockNum) / 16) + (_uint256SeedFromCalldata() / 16))
             / 2)
             + (globalModifier) + uint256(uint160(msg.sender)))));
-            //Seed from blockhash, calldata, and globalModifier
+            //Seed from blockhash, calldata, and globalModifier, and sender address
 
         globalModifier = _output / 16;
         //Include current output in seed for next output
