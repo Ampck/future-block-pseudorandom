@@ -23,6 +23,6 @@ NOTE: The block chosen must also be LESS THAN the current block, because blockha
 
 # Testing and Simulations
 
-To test tha validity of the pseudorandom number generator, run a simulation using the RandomGenerator hardhat test script with command "npx hardhat test test/RandomGenerator.js"
+To test the validity of the pseudorandom number generator, run a simulation using the RandomGenerator hardhat test script with command "npx hardhat test test/RandomGenerator.js"
 
-This simulates 1000 coin flips, and passes if 50% of results are head (within a 3% tolerance)
+This simulates 1000 coin flips, and passes if 50% of results are heads (within a 3% tolerance)
