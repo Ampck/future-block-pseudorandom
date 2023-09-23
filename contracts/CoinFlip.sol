@@ -115,8 +115,8 @@ contract CoinFlip is Random {
 	event FinalizeGame(
 		uint256 id,
 		address winner,
-		uint256 pot,
-		uint256 completionTime
+		uint256 pot/*,
+		uint256 completionTime*/
 	);
 
 	event UpdateFee(
@@ -282,7 +282,7 @@ contract CoinFlip is Random {
 		games[_id].completionTime = block.timestamp;
 		games[_id].status = 3; //set game status to completed
 
-		emit FinalizeGame(_id, games[_id].winner, pot, games[_id].completionTime);
+		emit FinalizeGame(_id, games[_id].winner, pot/*, games[_id].completionTime*/);
 	}
 
 	function cancelGame

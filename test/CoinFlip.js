@@ -5,10 +5,12 @@ const tokens = (n) => {
 }
 
 //Global data to test against
-const COMPLETION_DELAY = 10;
+const COMPLETION_DELAY = 1;
 const MINIMUM_BET = ethers.BigNumber.from(10000);
 const FEE_NUMERATOR = 256;
 const FEE_DENOMINATOR = 1000;
+const BALANCE_AFTER_FEE_HARDCODED = 15120 //THIS MUST BE MANUALLY UPDATED IF FEE_NUMERATOR OR FEE_DENOMINATOR ARE UPDATED
+    //UPDATE FORMULA: ((MINIMUM_BET) + (((MINIMUM_BET * 2) * FEE_NUMERATOR) / FEE_DENOMINATOR))
 
 describe('CoinFlip', () => {
     let token,
@@ -226,6 +228,118 @@ describe('CoinFlip', () => {
                 result = transaction.wait()
 
                 await expect(coinflip.connect(creator).cancelGame(1)).to.be.reverted
+            })
+        })
+    })
+
+    describe('Finalizes Game', () => {
+        let transaction,
+            result,
+            winner,
+            loser,
+            creatorBal,
+            challengerBal
+        describe('Success', () => {
+            beforeEach(async () => {
+                transaction = await coinflip.connect(creator).createGame_ETH({value: MINIMUM_BET});
+                result = await transaction.wait()
+                creatorBal = await ethers.provider.getBalance(creator.address)
+
+                transaction = await coinflip.connect(challenger).acceptGame(1, {value: MINIMUM_BET})
+                result = await transaction.wait()
+                challengerBal = await ethers.provider.getBalance(challenger.address)
+
+
+                //Create useless game to increment block number before finalizing
+                transaction = await coinflip.connect(finalizer).createGame_ETH({value: MINIMUM_BET})
+                result = await transaction.wait()
+
+                transaction = await coinflip.connect(finalizer).finalizeGame(1)
+                result = await transaction.wait()
+
+                if ((await coinflip.games(1)).winner == creator.address) {
+                    winner = creator.address;
+                    loser = challenger.address;
+                } else if ((await coinflip.games(1)).winner == challenger.address) {
+                    winner = challenger.address;
+                    loser = creator.address;
+                }
+            })
+            it('Status of game with id "1" becomes "3"', async () => {
+                expect((await coinflip.games(1)).status).to.equal(3)
+            })
+            it('Updates winner of game with id "1" to be one of the player addresses', async () => {
+                if ((await coinflip.games(1)).winner == creator.address) {
+                    expect(true).to.equal(true)
+                } else if ((await coinflip.games(1)).winner == challenger.address) {
+                    expect(true).to.equal(true)
+                }
+                else {
+                    expect(false).to.equal(true)
+                }
+            })
+            it('Win and loss stats updated', async () => {
+                expect((await coinflip.stats(winner)).wins).to.equal(1)
+                expect((await coinflip.stats(loser)).losses).to.equal(1)
+            })
+            it('Sends payout to winner', async () => {
+                if ((await coinflip.games(1)).winner == creator.address) {
+                    expect(await ethers.provider.getBalance(creator.address)).to.be.greaterThan(creatorBal)
+                } else if ((await coinflip.games(1)).winner == challenger.address) {
+                    expect(await ethers.provider.getBalance(challenger.address)).to.be.greaterThan(challengerBal)
+                }
+            })
+            it('Withholds fees', async () => {
+                expect(await ethers.provider.getBalance(coinflip.address)).to.equal(BALANCE_AFTER_FEE_HARDCODED)
+            })
+            it('Emits a FinalizeGame event', async () => {
+                await expect(transaction).to.emit(coinflip, 'FinalizeGame').
+                    withArgs(1, winner, MINIMUM_BET * 2)
+            })
+        })
+        describe('Failure', () => {
+            it('Reverts if game is not pending', async () => {
+                transaction = await coinflip.connect(creator).createGame_ETH({value: MINIMUM_BET});
+                result = await transaction.wait()
+
+                //Create useless game to increment block number before finalizing
+                transaction = await coinflip.connect(creator).createGame_ETH({value: MINIMUM_BET});
+                result = await transaction.wait()
+
+                await expect(coinflip.connect(finalizer).finalizeGame(1)).to.be.reverted
+            })
+            it('Reverts if COMPLETION_DELAY blocks have not passed', async () => {
+                transaction = await coinflip.connect(creator).createGame_ETH({value: MINIMUM_BET});
+                result = await transaction.wait()
+
+                transaction = await coinflip.connect(challenger).acceptGame(1, {value: MINIMUM_BET});
+                result = await transaction.wait()
+
+                await expect(coinflip.connect(finalizer).finalizeGame(1)).to.be.reverted
+            })
+            it('Reverts if winner is neither the creator nor the challenger', async () => {
+                transaction = await coinflip.connect(creator).createGame_ETH({value: MINIMUM_BET})
+                result = await transaction.wait()
+
+                transaction = await coinflip.connect(challenger).acceptGame(1, {value: MINIMUM_BET})
+                result = await transaction.wait()
+
+                //Create useless game to increment block number before finalizing
+                transaction = await coinflip.connect(creator).createGame_ETH({value: MINIMUM_BET})
+                result = await transaction.wait()
+
+                transaction = await coinflip.connect(finalizer).finalizeGame(1);
+                result = await transaction.wait()
+
+                winner = (await coinflip.games(1)).winner
+                let winnerIsPlayer
+
+                if (winner == creator.address || winner == challenger.address) {
+                    winnerIsPlayer = true
+                }
+
+                expect(winnerIsPlayer).to.equal(true)
+
             })
         })
     })
