@@ -228,6 +228,16 @@ contract CoinFlip is Random {
 
 		stats[games[_id].creator].activeGames--;
 
+		//update data
+		stats[msg.sender].totalUserAcceptedGames++;
+		stats[msg.sender]
+			.userAcceptedGameIds[
+				stats[msg.sender].
+				totalUserAcceptedGames
+			] = _id;
+			//Set latest game in user stats to this game
+
+
 		emit AcceptGame(
 			_id,
 			games[_id].challenger,

@@ -55,8 +55,7 @@ describe('CoinFlip', () => {
 
     describe('Creates Game (ETH)', () => {
         let transaction,
-            result,
-            contractBalance
+            result
         describe('Success', () => {
             beforeEach(async () => {
                 transaction = await coinflip.connect(creator).createGame_ETH({value: MINIMUM_BET});
@@ -106,6 +105,55 @@ describe('CoinFlip', () => {
             it('Reverts if wager is less than MINIMUM_BET', async () => {
                 await expect(coinflip.connect(creator).createGame_ETH({value: (MINIMUM_BET - 1)})).to.be.reverted
             })
+        })
+    })
+
+    describe('Accepts Game', () => {
+        let transaction,
+            result,
+            blockAccepted
+        describe('Success', () => {
+            beforeEach(async () => {
+                transaction = await coinflip.connect(creator).createGame_ETH({value: MINIMUM_BET});
+                result = await transaction.wait()
+
+                transaction = await coinflip.connect(challenger).acceptGame(1, {value: MINIMUM_BET});
+                result = await transaction.wait()
+                blockAccepted = await result.blockNumber
+            })
+
+            it('Challenger of game with id "1" becomes challenger', async () => {
+                expect((await coinflip.games(1)).challenger).to.equal(challenger.address)
+            })
+            it('Block Accepted of game with id "1" becomes correct', async () => {
+                expect((await coinflip.games(1)).blockAccepted).to.equal(blockAccepted)
+            })
+            it('Status of game with id "1" becomes "2"', async () => {
+                expect((await coinflip.games(1)).status).to.equal(2)
+            })
+
+            it('"activeGames" stat of creator becomes "0"', async () => {
+                expect((await coinflip.stats(creator.address)).activeGames).to.equal(0)
+            })
+            it('"totalAcceptedUserGames" stat of challenger becomes "1"', async () => {
+                expect((await coinflip.stats(creator.address)).totalUserGames).to.equal(1)
+            })
+            it('"userAcceptedGameIds" stat of challenger appends "1" at index "1"', async () => {
+                expect(await coinflip.getUserAcceptedGameIds(challenger.address, 1)).to.equal(1)
+            })
+
+            it('Updates CoinFlip contract ETH balance', async () => {
+                expect(await ethers.provider.getBalance(coinflip.address)).to.equal(MINIMUM_BET * 2)
+            })
+            it('Emits a AcceptGame event', async () => {
+                await expect(transaction).to.emit(coinflip, 'AcceptGame').
+                    withArgs(1, challenger.address, blockAccepted)
+            })
+        })
+        describe('Failure', () => {
+            /*it('Reverts if wager is less than MINIMUM_BET', async () => {
+                await expect(coinflip.connect(creator).createGame_ETH({value: (MINIMUM_BET - 1)})).to.be.reverted
+            })*/
         })
     })
 })
