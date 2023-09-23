@@ -3,9 +3,9 @@
 This project includes a pseudorandom number generator compatible with all EVM blockchains.
 
 The following demonstration applications are also provided:
-- Coin Flip
+- CoinFlip.sol
 
-To utilize pseudorandom functions in your smart contract, import "Random.sol" into your solidity file and create the desired contract with "is Random"
+To utilize pseudorandom functions in your smart contract, inherit from "Random"
 
 # How does it work?
 
@@ -20,3 +20,9 @@ If a user decides to send a random number of ETH between 1 and 10, the user fina
 NOTE: Developer must implement an incentive mechanism to finalize undesirable outcomes.
 
 NOTE: The block chosen must also be LESS THAN the current block, because blockhash(block.number) will always return 0 in solidity because the current block has not yet been mined.
+
+# Testing and Simulations
+
+To test tha validity of the pseudorandom number generator, run a simulation using the RandomGenerator hardhat test script with command "npx hardhat test test/RandomGenerator.js"
+
+This simulates 1000 coin flips, and passes if 50% of results are head (within a 3% tolerance)
