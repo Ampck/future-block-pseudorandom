@@ -175,7 +175,7 @@ contract CoinFlip is Random {
 			//innaccuracy does not hurt performance
 		games[totalGames].status = 1; //set game to active
 
-		//update data
+		//Update creator's created game count and list
 		stats[msg.sender].activeGames++;
 		stats[msg.sender].totalUserGames++;
 		stats[msg.sender]
@@ -183,7 +183,7 @@ contract CoinFlip is Random {
 				stats[msg.sender].
 				totalUserGames
 			] = totalGames;
-			//Set latest game in user stats to this game
+			//Set latest game in creator's created game list to this game
 
 		emit CreateGame(
 			games[totalGames].id,
@@ -228,14 +228,14 @@ contract CoinFlip is Random {
 
 		stats[games[_id].creator].activeGames--;
 
-		//update data
+		//Update challenger's accepted game count and list
 		stats[msg.sender].totalUserAcceptedGames++;
 		stats[msg.sender]
 			.userAcceptedGameIds[
 				stats[msg.sender].
 				totalUserAcceptedGames
 			] = _id;
-			//Set latest game in user stats to this game
+			//Set latest game in challenger's accepted game list to this game
 
 
 		emit AcceptGame(
