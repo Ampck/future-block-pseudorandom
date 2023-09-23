@@ -55,6 +55,32 @@ describe('CoinFlip', () => {
         })
     })
 
+    describe('Updates Fees', () => {
+        let transaction,
+            result
+        describe('Success', () => {
+            beforeEach(async () => {
+                transaction = await coinflip.connect(deployer).updateFee(1, 100);
+                result = await transaction.wait()
+            })
+            it('Changes feeNumerator to 1', async () => {
+                expect(await coinflip.feeNumerator()).to.equal(1)
+            })
+            it('Changes feeDenominator to 100', async () => {
+                expect(await coinflip.feeDenominator()).to.equal(100)
+            })
+            it('Emits an UpdateFee event', async () => {
+                await expect(transaction).to.emit(coinflip, 'UpdateFee').
+                    withArgs(1, 100)
+            })
+        })
+        describe('Failure', () => {
+            it('Rejects non-owners from updating', async () => {
+                await expect(coinflip.connect(creator).updateFee(1, 100)).to.be.reverted
+            })
+        })
+    })
+
     describe('Creates Game (ETH)', () => {
         let transaction,
             result
@@ -152,7 +178,7 @@ describe('CoinFlip', () => {
                 expect(await ethers.provider.getBalance(challenger.address)).to.greaterThan(ethers.utils.parseUnits("9999"))
             })
 
-            it('Emits a AcceptGame event', async () => {
+            it('Emits an AcceptGame event', async () => {
                 await expect(transaction).to.emit(coinflip, 'AcceptGame').
                     withArgs(1, challenger.address, blockAccepted)
             })
@@ -228,6 +254,58 @@ describe('CoinFlip', () => {
                 result = transaction.wait()
 
                 await expect(coinflip.connect(creator).cancelGame(1)).to.be.reverted
+            })
+        })
+    })
+
+    describe('Cancels All Games', () => {
+        let transaction,
+            result
+        describe('Success', () => {
+            beforeEach(async () => {
+                transaction = await coinflip.connect(creator).createGame_ETH({value: MINIMUM_BET});
+                result = await transaction.wait()
+                transaction = await coinflip.connect(creator).createGame_ETH({value: MINIMUM_BET});
+                result = await transaction.wait()
+                transaction = await coinflip.connect(challenger).createGame_ETH({value: MINIMUM_BET});
+                result = await transaction.wait()
+                transaction = await coinflip.connect(creator).createGame_ETH({value: MINIMUM_BET});
+                result = await transaction.wait()
+
+                /*
+                let _activeGames = ((await coinflip.stats(creator.address)).activeGames)
+                let _totaluserGames = ((await coinflip.stats(creator.address)).totalUserGames)
+                while (_activeGames > 0) {
+                    let currentValue = await coinflip.getUserGameIds(creator.address, _totaluserGames)
+                    console.log(`index: ${_totaluserGames} - value: ${currentValue} || _activeGames: ${_activeGames}`)
+                    _totaluserGames--
+                    _activeGames--
+                }*/
+                transaction = await coinflip.connect(creator).cancelAllGames();
+                result = await transaction.wait()
+            })
+
+            it('Status of game with ids "1", "2", and "4" become "4"', async () => {
+                expect((await coinflip.games(1)).status).to.equal(4)
+                expect((await coinflip.games(2)).status).to.equal(4)
+                expect((await coinflip.games(4)).status).to.equal(4)
+            })
+            it('Challenger game with id "3" remains active', async () => {
+                expect((await coinflip.games(3)).status).to.equal(1)
+            })
+
+            it('"activeGames" stat of creator becomes "0"', async () => {
+                expect((await coinflip.stats(creator.address)).activeGames).to.equal(0)
+            })
+
+            it('Sends all initial wagers back to creator', async () => {
+
+                expect(await ethers.provider.getBalance(coinflip.address)).to.equal(MINIMUM_BET)
+            })
+        })
+        describe('Failure', () => {
+            it('Reverts if canceller has no games', async () => {
+                await expect(coinflip.connect(creator).cancelAllGames()).to.be.reverted
             })
         })
     })

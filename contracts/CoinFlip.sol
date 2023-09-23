@@ -320,7 +320,7 @@ contract CoinFlip is Random {
     	//mapping(uint256 => uint256) userGameIds; //ids of all games created by user
 
 		while (stats[msg.sender].activeGames > 0) {
-			if (games[stats[msg.sender].userGameIds[_totalUserGames]].status == 0) {
+			if (_checkActive(stats[msg.sender].userGameIds[_totalUserGames])) {
 				cancelGame(stats[msg.sender].userGameIds[_totalUserGames]);
 			}
 			_totalUserGames--;
