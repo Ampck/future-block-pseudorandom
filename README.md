@@ -17,9 +17,7 @@ The psuedorandom magic comes when you make the user confirm a decision, then wai
 
 If a user decides to send a random number of ETH between 1 and 10, the user finalizes their decision, then 'x' number of blocks later the smart contract decides a number based on a blockhash created 'x' blocks AFTER the user solidified their decision, making the result unpredictable at the time of decision.
 
-NOTE: Developer must implement an incentive mechanism to finalize undesirable outcomes.
-
-NOTE: The block chosen must also be LESS THAN the current block, because blockhash(block.number) will always return 0 in solidity because the current block has not yet been mined.
+NOTE: The block chosen must also be LESS THAN the current block, because "blockhash(block.number)"" will always return 0 in solidity because the current block has not yet been mined.
 
 # Testing and Simulations
 
