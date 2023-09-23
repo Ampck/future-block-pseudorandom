@@ -10,27 +10,34 @@ describe('RandomGenerator', () => {
         receiver
     
     beforeEach(async () => {
-        const RG = await ethers.getContractFactory('RandomGenerator')
-        rg = await RG.deploy()
+        const RandomGenerator = await ethers.getContractFactory('RandomGenerator')
+        rg = await RandomGenerator.deploy() //1 hr, 10 blocks, 1 wei, 3% fee
 
         accounts = await ethers.getSigners()
-        emptyAddress = '0x0000000000000000000000000000000000000000'
         deployer = accounts[0]
-        receiver = accounts[1]
-        exchange = accounts[2]
     })
     
-    describe('Deployment', () => {
+    describe('Coin Flip is 50/50 after 1000', () => {
+        let transaction,
+            result,
+            randomResult,
+            combinedResults
         beforeEach(async () => {
-            tx = await rg.connect(deployer).testRandom()
-            result = await tx.wait()
-            //console.log(result)
+
+            combinedResults = ethers.BigNumber.from(0)
+            console.log("\nSimulating random numbers...\n")
+            for (let i = 0; i < 1000; i++) {
+                transaction = await rg.connect(deployer).generateRandom();
+                result = await transaction.wait()
+                randomResult = ethers.BigNumber.from(await rg.result())
+                combinedResults = combinedResults.add(randomResult)
+                process.stdout.write(`${randomResult}`)
+            }
+
+            console.log(`\nFinal results: ${combinedResults}`)
         })
-        it('returns', async () => {
-            //console.log(result)
-            const latestBlockNumber = await hre.ethers.provider.getBlockNumber()
-            const latestBlock = await hre.ethers.provider.getBlock(latestBlockNumber - 1)
-            //console.log(latestBlock)
+        it('Even coin flip within 3%', async () => {
+            expect(combinedResults).to.be.within(470, 530)
         })
     })
 })
