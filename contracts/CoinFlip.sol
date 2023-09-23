@@ -47,7 +47,7 @@ contract CoinFlip is Random {
         uint256 completionTime; //unix time (seconds) when completed and paid out
         uint256 blockAccepted; //block number when challenger accepted
         uint256 status;
-        	//0 = null
+        	//0 = null (untouched)
         	//1 = active
         	//2 = accepted
         	//3 = completed
@@ -98,8 +98,8 @@ contract CoinFlip is Random {
 		uint256 id,
 		address creator,
 		uint256 wager,
-		bool erc20,
-		uint256 creationTime
+		bool erc20/*,
+		uint256 creationTime*/
 	);
 
 	event AcceptGame(
@@ -123,6 +123,28 @@ contract CoinFlip is Random {
 		uint256 feeNumerator,
 		uint256 feeDenominator
 	);
+
+	//Mapping Data Retrieval Functions
+
+	function getUserGameIds
+		(address _user,
+		uint256 _index)
+		view
+		public
+		returns(uint256)
+	{
+		return(stats[_user].userGameIds[_index]);
+	}
+
+	function getUserAcceptedGameIds
+		(address _user,
+		uint256 _index)
+		view
+		public
+		returns(uint256)
+	{
+		return(stats[_user].userAcceptedGameIds[_index]);
+	}
 
 	//Publicly Accessible Functions
 
@@ -167,8 +189,8 @@ contract CoinFlip is Random {
 			games[totalGames].id,
 			games[totalGames].creator,
 			games[totalGames].wager,
-			games[totalGames].erc20,
-			games[totalGames].creationTime
+			games[totalGames].erc20/*,
+			games[totalGames].creationTime*/
 		);
 	}
 
@@ -241,7 +263,7 @@ contract CoinFlip is Random {
 		uint256 fee = (pot * feeNumerator) / feeDenominator;
 		uint256 payout = pot - fee;
 		feeBalance += fee; //Add fee to house fee balance
-		totalWinnings += pot; //Add pot to global totla winnings
+		totalWinnings += pot; //Add pot to global total winnings
 		//Send payout to winner
 		(bool sent, ) = games[_id].winner.call{value: payout}("");
 		require(sent, "ETH not sent to winner...");
