@@ -12,6 +12,6 @@ contract RandomGenerator is Random {
     function generateRandom()
     	public
     {
-    	result = (_random(block.number - 1))%2;
+    	result = (_random(block.number - 1)) % 2;
     }
 }
