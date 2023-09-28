@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 // Uncomment this line to use console.log
 import "hardhat/console.sol";
 import "./Random.sol";
+import "./Token.sol";
 
 contract CoinFlip is Random {
 
@@ -11,6 +12,7 @@ contract CoinFlip is Random {
 
 	address public owner;
 	uint256 public feeBalance;
+	mapping(address => uint256) public erc20FeeBalances;
 		//The total amount of fees (in wei) that belong to the house but have
 		//not yet left the contract
 	//uint256 public gameLifetime;
@@ -30,7 +32,8 @@ contract CoinFlip is Random {
 			//total fee = 2.91%
 	uint256 public totalGames;
 		//Total number of games created
-	uint256 public totalWinnings;
+	uint256 public totalWinningsETH;
+	mapping(address => uint256) public totalWinningsERC20;
 		//Total profits payed out to winners
 
 	//Data Structures
@@ -82,7 +85,7 @@ contract CoinFlip is Random {
 		feeDenominator = _feeDenominator;
 		feeBalance = 0;
 		totalGames = 0;
-		totalWinnings = 0;
+		totalWinningsETH = 0;
 	}
 
 	//Function Modifiers
@@ -194,16 +197,64 @@ contract CoinFlip is Random {
 		);
 	}
 
-/*
 	function createGame_ERC20
-		(uint256 _wager,
-		address _erc20Address)
+		(address _erc20Address,
+		uint256 _erc20wager)
 		public
-		returns(uint256)
+		payable
 	{
-		return 0;
+		
+		//requirements
+		/*
+		require(
+			(stats[msg.sender].activeGames <= maxActiveGames)
+			||
+			(maxActiveGames == 0),
+			"User has too many active games..."
+		);
+		*/
+
+		require(_erc20wager >= minimumBet,
+			"Wager is less than minimum bet...");
+		require(
+			Token(_erc20Address)
+				.transferFrom(
+					msg.sender,
+					address(this),
+					_erc20wager
+				),
+			"Unable to transfer ERC20 token balance for wager...");
+
+		//Setup game
+		totalGames++;
+		games[totalGames].id = totalGames;
+		games[totalGames].creator = msg.sender;
+		games[totalGames].wager = _erc20wager;
+		games[totalGames].erc20 = true;
+		games[totalGames].erc20Address = _erc20Address;
+		games[totalGames].creationTime = block.timestamp;
+			//This timestamp is early by one block, but this minor
+			//innaccuracy does not hurt performance
+		games[totalGames].status = 1; //set game to active
+
+		//Update creator's created game count and list
+		stats[msg.sender].activeGames++;
+		stats[msg.sender].totalUserGames++;
+		stats[msg.sender]
+			.userGameIds[
+				stats[msg.sender].
+				totalUserGames
+			] = totalGames;
+			//Set latest game in creator's created game list to this game
+
+		emit CreateGame(
+			games[totalGames].id,
+			games[totalGames].creator,
+			games[totalGames].wager,
+			games[totalGames].erc20,
+			games[totalGames].creationTime
+		);
 	}
-*/
 
 	function acceptGame
 		(uint256 _id)
@@ -211,15 +262,27 @@ contract CoinFlip is Random {
 		payable
 	{
 		require(games[_id].creator != msg.sender, "Challenger can not be creator...");
-		require(msg.value >= games[_id].wager, "Sent ETH is less than wager...");
 		require(_checkActive(_id), "Game is not active...");
 		//require(!_checkExpired(_id), "Game is expired...");
 
-		//Send excess ETH back to challenger
-		uint256 diff = msg.value - games[_id].wager;
-		if (diff > 0) {
-			(bool sent, ) = msg.sender.call{value: diff}("");
-			require(sent, "Exces ETH not sent back to challenger");
+		if (games[_id].erc20) {
+			require(
+				Token(games[_id].erc20Address)
+					.transferFrom(
+						msg.sender,
+						address(this),
+						games[_id].wager
+					),
+				"Unable to transfer ERC20 token balance for wager...");			
+		} else {
+			require(msg.value >= games[_id].wager, "Sent ETH is less than wager...");
+		
+			//Send excess ETH back to challenger
+			uint256 diff = msg.value - games[_id].wager;
+			if (diff > 0) {
+				(bool sent, ) = msg.sender.call{value: diff}("");
+				require(sent, "Exces ETH not sent back to challenger");
+			}
 		}
 		
 		games[_id].challenger = msg.sender;
@@ -268,15 +331,32 @@ contract CoinFlip is Random {
 			stats[games[_id].creator].losses++;
 		}
 
-		//Calculate house fee and winner payout
-		uint256 pot = games[_id].wager * 2;
-		uint256 fee = (pot * feeNumerator) / feeDenominator;
-		uint256 payout = pot - fee;
-		feeBalance += fee; //Add fee to house fee balance
-		totalWinnings += pot; //Add pot to global total winnings
-		//Send payout to winner
-		(bool sent, ) = games[_id].winner.call{value: payout}("");
-		require(sent, "ETH not sent to winner...");
+		uint256 pot;
+		uint256 fee;
+		uint256 payout;
+		if (games[_id].erc20) { //ERC20 Calculate house fee and winner payout
+			pot = games[_id].wager * 2;
+			fee = (pot * feeNumerator) / feeDenominator;
+			payout = pot - fee;
+			
+			erc20FeeBalances[games[_id].erc20Address] += fee; //Add fee to house fee balance
+			totalWinningsERC20[games[_id].erc20Address] += pot; //Add pot to global total winnings
+
+			//Send payout to winner
+			require(Token(games[_id].erc20Address).transfer(games[_id].winner, payout),
+			"Tokens not transferred during finalization...");
+		} else { //ETH Calculate house fee and winner payout
+			pot = games[_id].wager * 2;
+			fee = (pot * feeNumerator) / feeDenominator;
+			payout = pot - fee;
+			
+			feeBalance += fee; //Add fee to house fee balance
+			totalWinningsETH += pot; //Add pot to global total winnings
+			
+			//Send payout to winner
+			(bool sent, ) = games[_id].winner.call{value: payout}("");
+			require(sent, "ETH not sent to winner...");
+		}
 
 		//Update state of game with further details
 		games[_id].completionTime = block.timestamp;
@@ -340,6 +420,47 @@ contract CoinFlip is Random {
 		feeDenominator = _feeDenominator;
 
 		emit UpdateFee(feeNumerator, feeDenominator);
+	}
+
+	function withdrawETH()
+		onlyOwner
+		public
+	{
+		(bool sent, ) = owner.call{value: feeBalance}("");
+		require(sent, "ETH not sent to owner...");
+	}
+
+	function liquidateETH()
+		onlyOwner
+		public
+	{
+		uint256 _value = address(this).balance;
+		(bool sent, ) = owner.call{value: _value}("");
+		require(sent, "ETH not sent to owner...");
+	}
+
+	function withdrawERC20
+		(address _erc20Address)
+		onlyOwner
+		public
+	{
+		uint256 tokenBalance = erc20FeeBalances[_erc20Address];
+		require(tokenBalance > 0,
+			"ERC20 token balance is 0...");
+		require(Token(_erc20Address).transfer(owner, tokenBalance),
+			"Tokens not transferred during finalization...");
+	}
+
+	function liquidateERC20
+		(address _erc20Address)
+		onlyOwner
+		public
+	{
+		uint256 tokenBalance = Token(_erc20Address).balanceOf(address(this));
+		require(tokenBalance > 0,
+			"ERC20 token balance is 0...");
+		require(Token(_erc20Address).transfer(owner, tokenBalance),
+			"Tokens not transferred during finalization...");
 	}
 
 	//Internal Utility Functions

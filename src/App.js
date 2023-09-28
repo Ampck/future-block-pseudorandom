@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Container } from 'react-bootstrap'
 import { ethers } from 'ethers'
+import Form from 'react-bootstrap/Form';
 
 import Navigation from './components/Navigation';
 import GameForms from './components/GameForms';
@@ -9,8 +10,8 @@ import GamesList from './components/GamesList';
 import './App.css';
 
 import config from './config.json';
-import COINFLIP_ABI from './abis/CoinFlip.json'
-const NETWORK = 31337
+import COINFLIP_ABI from './abis/CoinFlip.json';
+const NETWORK = 31337;
 
 function App() {
   const [account, setAccount] = useState(null)
@@ -59,6 +60,11 @@ function App() {
     <div className="App">
       <Navigation/>
       <main>
+          <Form onSubmit={loadBlockchainData}>
+            <Form.Group className="text-center" style={{maxWidth:'450px', margin: '5px auto'}}>
+              <Form.Control type='number' placeholder='Enter game id to cancel' className='my-2' onChange={(e) => setIsLoading(true)}/>         
+            </Form.Group>
+          </Form>
           <div style={{width:'100%'}}>
               <div className='card'>
                 <GameForms

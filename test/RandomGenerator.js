@@ -3,6 +3,14 @@ const { ethers } = require ('hardhat');
 const tokens = (n) => {
     return ethers.utils.parseUnits(n.toString(), 'ether')
 }
+
+
+function waitTime(millisec) {
+    return new Promise(resolve => {
+        setTimeout(() => { resolve('') }, millisec);
+    })
+}
+
 describe('RandomGenerator', () => {
     let token,
         accounts,
@@ -32,6 +40,7 @@ describe('RandomGenerator', () => {
                 randomResult = ethers.BigNumber.from(await rg.result())
                 combinedResults = combinedResults.add(randomResult)
                 process.stdout.write(`${randomResult}`)
+                //await waitTime(1000)
             }
 
             console.log(`\nFinal results: ${combinedResults}`)
