@@ -45,7 +45,7 @@ function App() {
       items.push(currentGame)
     }
     setGames(items)
-
+    
     setIsLoading(false)
   }
 
