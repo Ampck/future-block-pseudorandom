@@ -89,6 +89,12 @@
           "internalType": "bool",
           "name": "erc20",
           "type": "bool"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "creationTime",
+          "type": "uint256"
         }
       ],
       "name": "CreateGame",
@@ -113,6 +119,12 @@
           "indexed": false,
           "internalType": "uint256",
           "name": "pot",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "completionTime",
           "type": "uint256"
         }
       ],

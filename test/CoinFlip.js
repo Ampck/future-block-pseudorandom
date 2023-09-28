@@ -71,7 +71,10 @@ describe('CoinFlip', () => {
             })
             it('Emits an UpdateFee event', async () => {
                 await expect(transaction).to.emit(coinflip, 'UpdateFee').
-                    withArgs(1, 100)
+                    withArgs(
+                        1,
+                        100
+                    )
             })
         })
         describe('Failure', () => {
@@ -126,7 +129,13 @@ describe('CoinFlip', () => {
             })
             it('Emits a CreateGame event', async () => {
                 await expect(transaction).to.emit(coinflip, 'CreateGame').
-                    withArgs(1, creator.address, MINIMUM_BET, false)
+                    withArgs(
+                        1,
+                        creator.address,
+                        MINIMUM_BET,
+                        false,
+                        (await ethers.provider.getBlock(await ethers.provider.getBlockNumber())).timestamp
+                    )
             })
         })
         describe('Failure', () => {
@@ -180,7 +189,11 @@ describe('CoinFlip', () => {
 
             it('Emits an AcceptGame event', async () => {
                 await expect(transaction).to.emit(coinflip, 'AcceptGame').
-                    withArgs(1, challenger.address, blockAccepted)
+                    withArgs(
+                        1,
+                        challenger.address,
+                        blockAccepted
+                    )
             })
         })
         describe('Failure', () => {
@@ -203,7 +216,11 @@ describe('CoinFlip', () => {
                 result = await transaction.wait()
                 blockAccepted = await result.blockNumber
                 await expect(transaction).to.emit(coinflip, 'AcceptGame').
-                    withArgs(1, challenger.address, blockAccepted)
+                    withArgs(
+                        1,
+                        challenger.address,
+                        blockAccepted
+                    )
                 await expect(coinflip.connect(finalizer).acceptGame(1, {value: (MINIMUM_BET)})).to.be.reverted
             })
         })
@@ -372,7 +389,11 @@ describe('CoinFlip', () => {
             })
             it('Emits a FinalizeGame event', async () => {
                 await expect(transaction).to.emit(coinflip, 'FinalizeGame').
-                    withArgs(1, winner, MINIMUM_BET * 2)
+                    withArgs(1,
+                        winner,
+                        MINIMUM_BET * 2,
+                        (await ethers.provider.getBlock(await ethers.provider.getBlockNumber())).timestamp
+                    )
             })
         })
         describe('Failure', () => {

@@ -40,17 +40,17 @@ const GamesList = ({provider, coinflip, totalGames, games, setIsLoading}) => {
 				<Table striped bordered hover responsive>
 			      <thead>
 			        <tr>
-			          <th>id</th>
-			          <th>creator</th>
-			          <th>challenger</th>
-			          <th>winner</th>
-			          <th>wager</th>
-			          <th>erc20</th>
-			          <th>erc20 address</th>
-			          <th>creation time</th>
-			          <th>completion time</th>
-			          <th>block accepted</th>
-			          <th>status</th>
+			          <th>id | </th>
+			          <th>creator | </th>
+			          <th>challenger | </th>
+			          <th>winner | </th>
+			          <th>wager | </th>
+			          <th>erc20 | </th>
+			          <th>erc20 address | </th>
+			          <th>creation time | </th>
+			          <th>completion time | </th>
+			          <th>block accepted | </th>
+			          <th>status | </th>
 			          <th>accept game</th>
 			        </tr>
 			      </thead>
