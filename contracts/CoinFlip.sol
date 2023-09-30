@@ -15,6 +15,7 @@ contract CoinFlip is Random {
 	mapping(address => uint256) public erc20FeeBalances;
 		//The total amount of fees (in wei) that belong to the house but have
 		//not yet left the contract
+	mapping(address => bool) public erc20Whitelist;
 	//uint256 public gameLifetime;
 		//Number of seconds until a game request expires
 	uint256 public completionDelay;
@@ -201,7 +202,6 @@ contract CoinFlip is Random {
 		(address _erc20Address,
 		uint256 _erc20wager)
 		public
-		payable
 	{
 		
 		//requirements
@@ -213,7 +213,8 @@ contract CoinFlip is Random {
 			"User has too many active games..."
 		);
 		*/
-
+		require(erc20Whitelist[_erc20Address] == true,
+			"ERC20 address not in whitelist...");
 		require(_erc20wager >= minimumBet,
 			"Wager is less than minimum bet...");
 		require(
@@ -372,9 +373,15 @@ contract CoinFlip is Random {
 		require(games[_id].creator == msg.sender, "Attempted to cancel game without ownership...");
 		require(_checkActive(_id), "Game is already pending or inactive...");
 
+		if (games[_id].erc20) {
+			require (Token(games[_id].erc20Address).transfer(games[_id].creator, games[_id].wager),
+				"Contract could not complete ERC20 transfer...");
+		} else {
+			(bool sent, ) = games[_id].creator.call{value: games[_id].wager}("");
+			require(sent, "ETH not returned to creator...");
+		}
+
 		//Return wager to creator
-		(bool sent, ) = games[_id].creator.call{value: games[_id].wager}("");
-		require(sent, "ETH not returned to creator...");
 
 		/*
 		if (_checkExpired(_id)) {
@@ -409,6 +416,22 @@ contract CoinFlip is Random {
 	}
 
 	//Admin Functions
+
+	function addERC20Whitelist
+		(address _erc20)
+		public
+		onlyOwner
+	{
+		erc20Whitelist[_erc20] = true;
+	}
+
+	function removeERC20Whitelist
+		(address _erc20)
+		public
+		onlyOwner
+	{
+		delete erc20Whitelist[_erc20];
+	}
 
 	function updateFee
 		(uint256 _feeNumerator,

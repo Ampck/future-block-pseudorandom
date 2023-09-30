@@ -76,7 +76,8 @@ contract Token {
         public
         returns (bool success)
     {
-        require(_value <= allowance[_from][msg.sender]);
+        require(_value <= allowance[_from][msg.sender],
+            "Allowance not high enough...");
 
         allowance[_from][msg.sender] = allowance[_from][msg.sender] - _value;
 
