@@ -3,5 +3,10 @@
     "coinflip": {
       "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
     }
+  },
+  "5": {
+    "coinflip": {
+      "address": "0xB7aF61bc14714b43de9EBb1bA6DFA363a588d667"
+    }
   }
 }

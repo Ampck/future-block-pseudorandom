@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Container } from 'react-bootstrap'
 import { ethers } from 'ethers'
 import Form from 'react-bootstrap/Form';
 
@@ -11,7 +10,7 @@ import './App.css';
 
 import config from './config.json';
 import COINFLIP_ABI from './abis/CoinFlip.json';
-const NETWORK = 31337;
+const NETWORKS = [31337, 5];
 
 function App() {
   const [account, setAccount] = useState(null)
@@ -28,7 +27,7 @@ function App() {
     const provider = new ethers.providers.Web3Provider(window.ethereum)
     setProvider(provider)
 
-    const coinflip = new ethers.Contract(config[NETWORK].coinflip.address, COINFLIP_ABI, provider)
+    const coinflip = new ethers.Contract(config[NETWORKS[1]].coinflip.address, COINFLIP_ABI, provider)
     setCoinflip(coinflip)
 
     // Fetch accounts
@@ -38,11 +37,11 @@ function App() {
 
     const count = await coinflip.totalGames()
     setTotalGames(count)
-    console.log(`total games: ${count}`)
+    //console.log(`total games: ${count}`)
     const items = []
     for (var i = count; i > 0; i--) {
       const currentGame = await coinflip.games(i)
-      console.log(currentGame)
+      //console.log(currentGame)
       items.push(currentGame)
     }
     setGames(items)
@@ -58,13 +57,8 @@ function App() {
 
   return ( 
     <div className="App">
-      <Navigation/>
+      <Navigation account={account}/>
       <main>
-          <Form onSubmit={loadBlockchainData}>
-            <Form.Group className="text-center" style={{maxWidth:'450px', margin: '5px auto'}}>
-              <Form.Control type='number' placeholder='Enter game id to cancel' className='my-2' onChange={(e) => setIsLoading(true)}/>         
-            </Form.Group>
-          </Form>
           <div style={{width:'100%'}}>
               <div className='card'>
                 <GameForms

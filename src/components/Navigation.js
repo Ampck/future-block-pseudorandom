@@ -4,7 +4,7 @@ import { ethers } from 'ethers'
 
 import cflogo from '../cflogo.jpeg';
 
-function Navigation() {
+function Navigation({account}) {
 	return (
 		<header>
 	        <a href="http://localhost:3000/">
@@ -22,7 +22,7 @@ function Navigation() {
 	        	</div>
 	        </a>
 	        <a>About</a>
-	        <span>Wallet ID Placeholder</span>
+	        <span>{account}</span>
 		</header>
 	);
 }

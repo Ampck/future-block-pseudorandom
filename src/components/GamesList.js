@@ -29,10 +29,6 @@ const GamesList = ({provider, coinflip, totalGames, games, setIsLoading}) => {
 		setIsLoading(true)
 	}
 
-	console.log(`'provider: ${provider}`)
-	console.log(`'games: ${games}`)
-	console.log(`'total games: ${totalGames}`)
-
 	return (
 		<>
 			<div className='text-center'>
@@ -61,7 +57,12 @@ const GamesList = ({provider, coinflip, totalGames, games, setIsLoading}) => {
 				      		<td>{game.creator.toString().slice(0,5)}...</td>
 				      		<td>{game.challenger.toString().slice(0,5)}...</td>
 				      		<td>{game.winner.toString().slice(0,5)}...</td>
-				      		<td>{ethers.utils.formatUnits(game.wager, "ether")} ETH</td>
+				      		<td>{ethers.utils.formatUnits(game.wager, "ether")}
+				      		{game.erc20 ? (
+				      			' Tokens'
+				      		) : (
+				      			' Ether'
+				      		)}</td>
 				      		<td>{game.erc20.toString()}</td>
 				      		<td>{game.erc20Address.toString().slice(0,5)}...</td>
 				      		<td>{game.creationTime.toString()}</td>
