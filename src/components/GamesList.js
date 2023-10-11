@@ -9,8 +9,13 @@ const GamesList = ({provider, coinflip, totalGames, games, setIsLoading}) => {
 
 		try {
 			const signer = await provider.getSigner()
-			const transaction = await coinflip.connect(signer).acceptGame(id, {value: wager})
+			//const transaction = await coinflip.connect(signer).acceptGame(id, {value: wager})
+			//await transaction.wait()
+
+
+			const transaction = await coinflip.connect(signer).acceptGame(id)
 			await transaction.wait()
+
 		} catch (e) {
 			window.alert(e)
 		}
