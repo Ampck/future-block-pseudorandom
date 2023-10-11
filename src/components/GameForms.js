@@ -33,8 +33,8 @@ const  GameForms = ({provider, coinflip, setIsLoading}) => {
 
 				//if ((await token.allowance(signer.address, coinflip.address)) < formattedWager) {
 
-					//transaction = await token.connect(signer).approve(coinflip.address, formattedWager)
-					//await transaction.wait()
+					transaction = await token.connect(signer).approve(coinflip.address, formattedWager)
+					await transaction.wait()
 
 				//}
 
