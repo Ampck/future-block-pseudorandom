@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react'
 import { ethers } from 'ethers'
+import { Container } from 'react-bootstrap'
+import { HashRouter, Routes, Route } from 'react-router-dom'
 import Form from 'react-bootstrap/Form';
 
 import Navigation from './components/Navigation';
+import Tabs from './components/Tabs';
 import GameForms from './components/GameForms';
 import GamesList from './components/GamesList';
+import CancelGame from './components/CancelGame';
+import DeveloperTools from './components/DeveloperTools';
 
 import './App.css';
 
@@ -55,30 +60,32 @@ function App() {
     }
   }, [isLoading]);
 
-  return ( 
-    <div className="App">
-      <Navigation account={account}/>
-      <main>
-          <div style={{width:'100%'}}>
-              <div className='card'>
-                <GameForms
-                  provider={provider}
-                  coinflip={coinflip}
-                  setIsLoading={setIsLoading}
-                />
+  return (
+    <>
+      <Container className="App">
+        <HashRouter>
+          <Navigation account={account}/>
+          <Routes>
+            <Route exact path="/" element={
+              <div style={{width:'100%', margin: '0px'}}>
+                <div className='card' style={{backgroundColor: 'black'}}>
+                  <GameForms
+                    provider={provider}
+                    coinflip={coinflip}
+                    setIsLoading={setIsLoading}
+                    account={account}
+                    totalGames={totalGames}
+                    games={games}
+                  />
+                </div>
               </div>
-              <div className='card'>
-                <GamesList
-                  provider={provider}
-                  coinflip={coinflip}
-                  totalGames={totalGames}
-                  games={games}
-                  setIsLoading={setIsLoading}
-                />
-              </div>
-          </div>
-        </main>
-    </div>
+            }/>
+            <Route exact path="/cancel" element={<CancelGame/>}/>
+            <Route exact path="/tools" element={<DeveloperTools/>}/>
+          </Routes>
+        </HashRouter>
+      </Container>
+    </>
   );
 }
 

@@ -3,40 +3,87 @@ import Table from 'react-bootstrap/Table';
 import Button from 'react-bootstrap/Button';
 import {ethers} from 'ethers'
 
-const GamesList = ({provider, coinflip, totalGames, games, setIsLoading}) => {
+import TOKEN_ABI from '../abis/Token.json';
+
+const GamesList = ({provider, coinflip, totalGames, games, setIsLoading, account}) => {
+
+	//console.log(games)
 
 	const acceptHandler = async (id, wager) => {
 
-		try {
-			const signer = await provider.getSigner()
-			//const transaction = await coinflip.connect(signer).acceptGame(id, {value: wager})
-			//await transaction.wait()
+		let transaction
 
+		let currentGame = (await games[totalGames-id])
 
-			const transaction = await coinflip.connect(signer).acceptGame(id)
-			await transaction.wait()
+		if (account != currentGame.creator) {
 
-		} catch (e) {
-			window.alert(e)
+			try {
+				const signer = await provider.getSigner()
+
+				if (currentGame.erc20) {
+
+					const token = new ethers.Contract(currentGame.erc20Address, TOKEN_ABI, provider)
+
+					transaction = await token.connect(signer).approve(coinflip.address, wager)
+					await transaction.wait()
+
+					transaction = await coinflip.connect(signer).acceptGame(id)
+					await transaction.wait()
+
+				} else {
+
+					transaction = await coinflip.connect(signer).acceptGame(id, {value: wager})
+					await transaction.wait()
+
+				}
+
+			} catch (e) {
+				window.alert(e.reason)
+			}
+
+		} else {
+
+			window.alert("Challenger can not be creator...")
+
 		}
+		
 		setIsLoading(true)
+
 	}
 
 	const finalizeHandler = async (id) => {
 
-		try {
-			const signer = await provider.getSigner()
-			const transaction = await coinflip.connect(signer).finalizeGame(id)
-			await transaction.wait()
-		} catch (e) {
-			window.alert(e)
+		const blockDelay = await coinflip.completionDelay()
+		console.log("completion delay: ", blockDelay)
+
+		const currentBlock = ethers.BigNumber.from(await provider.getBlockNumber())
+		const finalizeBlock = ethers.BigNumber.from(await games[totalGames-id].blockAccepted)
+		console.log(finalizeBlock.toString(), ethers.BigNumber.from(currentBlock).toString())
+		const blocksLeft = currentBlock - finalizeBlock
+		console.log(blocksLeft)
+		if (blocksLeft > blockDelay) {
+
+			try {
+				const signer = await provider.getSigner()
+				const transaction = await coinflip.connect(signer).finalizeGame(id)
+				await transaction.wait()
+			} catch (e) {
+				window.alert(e.reason)
+			}
+
+		} else {
+
+			window.alert("Must wait " + (blockDelay - blocksLeft) + " more blocks to finalize game...")
+
 		}
+
+		
 		setIsLoading(true)
 	}
 
 	return (
 		<>
-			<div className='text-center'>
+			<div className='text-center' style={{display: 'inline-block'}}>
 				<h2>Games List</h2>
 				<Table striped bordered hover responsive>
 			      <thead>

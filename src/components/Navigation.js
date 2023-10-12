@@ -6,7 +6,7 @@ import cflogo from '../cflogo.jpeg';
 
 function Navigation({account}) {
 	return (
-		<header>
+		<header style={{margin: '0', backgroundColor: '#aaaaaa', margin: '0px'}}>
 	        <a href="http://localhost:3000/">
 	        	<img src={cflogo} alt="Home" style={{
 	        		width:'32px'

@@ -1,16 +1,23 @@
 import {useState} from 'react';
 import * as React from 'react';
+import Card from'react-bootstrap/Card';
 import Form from 'react-bootstrap/Form';
+import InputGroup from 'react-bootstrap/InputGroup';
+import Dropdown from 'react-bootstrap/Dropdown';
+import DropdownButton from 'react-bootstrap/DropdownButton';
 import Button from 'react-bootstrap/Button';
+import Row from 'react-bootstrap/Row';
 import Spinner from 'react-bootstrap/Spinner';
 import {ethers} from 'ethers'
+
+import GamesList from './GamesList';
 
 import config from '../config.json';
 import TOKEN_ABI from '../abis/Token.json';
 
 const NETWORKS = [31337, 5];
 
-const  GameForms = ({provider, coinflip, setIsLoading}) => {
+const  GameForms = ({provider, coinflip, setIsLoading, account, totalGames, games}) => {
 	const [wager, setWager] = useState(0)
 	const [erc20, setErc20] = useState(false)
 	const [erc20Address, setErc20Address] = useState('')
@@ -21,7 +28,7 @@ const  GameForms = ({provider, coinflip, setIsLoading}) => {
 		e.preventDefault()
 		setIsWaiting(true)
 		let transaction
-		console.log(erc20, ethers.utils.getAddress(erc20Address))
+		if (erc20) {console.log(erc20, ethers.utils.getAddress(erc20Address))}
 		try {
 
 			if (erc20 == true) {
@@ -31,12 +38,8 @@ const  GameForms = ({provider, coinflip, setIsLoading}) => {
 
 				const token = new ethers.Contract(erc20Address, TOKEN_ABI, provider)
 
-				//if ((await token.allowance(signer.address, coinflip.address)) < formattedWager) {
-
-					transaction = await token.connect(signer).approve(coinflip.address, formattedWager)
-					await transaction.wait()
-
-				//}
+				transaction = await token.connect(signer).approve(coinflip.address, formattedWager)
+				await transaction.wait()
 
 				transaction = await coinflip.connect(signer).createGame_ERC20(ethers.utils.getAddress(erc20Address), formattedWager)
 				await transaction.wait()
@@ -51,7 +54,7 @@ const  GameForms = ({provider, coinflip, setIsLoading}) => {
 			}
 
 		} catch (e) {
-			window.alert(e)
+			window.alert(e.reason)
 		}
 		setIsWaiting(false)
 		setIsLoading(true)
@@ -65,7 +68,7 @@ const  GameForms = ({provider, coinflip, setIsLoading}) => {
 			const transaction = await coinflip.connect(signer).cancelGame(cancelId)
 			await transaction.wait()
 		} catch (e) {
-			window.alert(e)
+			window.alert(e.reason)
 		}
 		setIsWaiting(false)
 		setIsLoading(true)
@@ -83,68 +86,92 @@ const  GameForms = ({provider, coinflip, setIsLoading}) => {
 			let transaction = await coinflip.connect(signer).addERC20Whitelist(ethers.utils.getAddress(erc20Address))
 			await transaction.wait()
 		} catch (e) {
-			window.alert(e)
+			window.alert(e.reason)
 		}
 	}
 
 	return(
 		<>	
-			<div style={{margin:'50px', display: 'inline-block'}}>
-				<h2>Create Game</h2>
-				<Form onSubmit={createGameHandler}>
-					<Form.Group className="text-center" style={{maxWidth:'450px', margin: '5px auto'}}>
-						<Form.Control style={{width:'100%'}} type='number' step='0.0000001' placeholder='Enter wager' className='my-2' onChange={(e) => setWager(e.target.value)}/>
-						<br/>
-						<div>
-							<Form.Control type='checkbox' placeholder='erc20?' className='my-2' onChange={erc20BooleanHandler}/>
-							<Form.Control type='text' placeholder='ERC20 Address' className='my-2' onChange={(e) => setErc20Address(e.target.value)}/>
+		<div style={{maxWidth: '100%', margin: '0px'}}>
+			<Card style={{maxWidth:'450px', backgroundColor: '#aaaaaa', display: 'inline-block', margin: '0px'}} className='mx-auto px-4'>
+				{account ? (
+					<div>
+						<div style={{margin:'50px', display: 'inline-block'}}>
+							<h2>Create Game</h2>
+							<Form onSubmit={createGameHandler}>
+								<Form.Group className="text-center" style={{maxWidth:'450px', margin: '5px auto'}}>
+									<Form.Control style={{width:'100%'}} type='number' step='0.0000001' placeholder='Enter wager' className='my-2' onChange={(e) => setWager(e.target.value)}/>
+									<br/>
+									<div>
+										<Form.Control type='checkbox' placeholder='erc20?' className='my-2' onChange={erc20BooleanHandler}/>
+										<Form.Control type='text' placeholder='ERC20 Address' className='my-2' onChange={(e) => setErc20Address(e.target.value)}/>
+									</div>
+									<br/>
+									{isWaiting? (
+										<>
+											<Spinner animation='border'/>
+											<p>Loading...</p>
+										</>
+									) : (
+										<>
+											<Button
+												variant='primary'
+												type='submit'
+											>
+												Create Game
+											</Button>
+											<br/>
+											<br/>
+											<strong>DEVELOPER TOOLS</strong>
+											<br/>
+											<Button
+												onClick={whitelistHandler}
+											>
+												Whitelist Address
+											</Button>
+										</>
+									)}					
+								</Form.Group>
+							</Form>
 						</div>
-						<br/>
-						{isWaiting? (
-							<>
-								<Spinner animation='border'/>
-								<p>Loading...</p>
-							</>
-						) : (
-							<>
-								<Button
-									variant='primary'
-									type='submit'
-								>
-									Create Game
-								</Button>
-								<br/>
-								<br/>
-								<strong>DEVELOPER TOOLS</strong>
-								<br/>
-								<Button
-									onClick={whitelistHandler}
-								>
-									Whitelist Address
-								</Button>
-							</>
-						)}					
-					</Form.Group>
-				</Form>
-			</div>
-			<div style={{margin:'50px', display: 'inline-block'}}>
-				<h2>Cancel Game</h2>
-				<Form onSubmit={cancelGameHandler}>
-					<Form.Group className="text-center" style={{maxWidth:'450px', margin: '5px auto'}}>
-						<Form.Control type='number' placeholder='Enter game id to cancel' className='my-2' onChange={(e) => setCancelId(e.target.value)}/>
-						{isWaiting? (
-							<Spinner animation='border'/>
-						) : (
-							<Button
-								variant='primary'
-								type='submit'
-							>
-								Cancel Game
-							</Button>
-						)}					
-					</Form.Group>
-				</Form>
-			</div>
+						<div style={{marginBottom:'50px', display: 'inline-block'}}>
+							<h2>Cancel Game</h2>
+							<Form onSubmit={cancelGameHandler}>
+								<Form.Group className="text-center" style={{maxWidth:'450px', margin: '5px auto'}}>
+									<Form.Control type='number' placeholder='Enter game id to cancel' className='my-2' onChange={(e) => setCancelId(e.target.value)}/>
+				
+									{isWaiting? (
+										<Spinner animation='border'/>
+									) : (
+										<Button
+											variant='primary'
+											type='submit'
+										>
+											Cancel Game
+										</Button>
+									)}					
+								</Form.Group>
+							</Form>
+						</div>
+					</div>
+				) : (
+					<p className ='d-flex justify-content-center align-items-center' style={{height: '300px'}}>Connect wallet to use app.</p>
+				)}
+
+			</Card>
+			<Card style={{backgroundColor: '#aaaaaa', display: 'inline-block', margin: '50px'}} className='mx-auto px-4'>
+				<div className='card'>
+                  <GamesList
+                    provider={provider}
+                    coinflip={coinflip}
+                    totalGames={totalGames}
+                    games={games}
+                    setIsLoading={setIsLoading}
+                   	account={account}
+                  />
+                </div>
+			</Card>
+		</div>
 		</>
 	);
 }
