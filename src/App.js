@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { ethers } from 'ethers'
+import { useDispatch } from 'react-redux'
 import { Container } from 'react-bootstrap'
 import { HashRouter, Routes, Route } from 'react-router-dom'
+import { ethers } from 'ethers'
 import Form from 'react-bootstrap/Form';
 
 import Navigation from './components/Navigation';
@@ -13,11 +14,14 @@ import DeveloperTools from './components/DeveloperTools';
 
 import './App.css';
 
+import { loadProvider, loadAccount, loadNetwork, loadTokens, loadCoinflip, loadBalances } from './store/interactions';
+
 import config from './config.json';
 import COINFLIP_ABI from './abis/CoinFlip.json';
 const NETWORKS = [31337, 5];
 
 function App() {
+  /*
   const [account, setAccount] = useState(null)
   const [provider, setProvider] = useState(null)
 
@@ -53,30 +57,38 @@ function App() {
     
     setIsLoading(false)
   }
+  */
+
+  const dispatch = useDispatch()
+
+  const loadBlockchainData = async () => {
+    
+    const provider = loadProvider(dispatch)
+    const chainId = await loadNetwork(provider, dispatch)
+
+    window.ethereum.on('accountsChanged', async () => {
+      await loadAccount(dispatch)
+    })
+
+    let coinflip = await loadCoinflip(provider, chainId, dispatch)
+
+  }
 
   useEffect(() => {
-    if (isLoading) {
-      loadBlockchainData()
-    }
-  }, [isLoading]);
+    loadBlockchainData()
+  }, []);
 
   return (
     <>
       <Container className="App">
         <HashRouter>
-          <Navigation account={account}/>
+          <Navigation/>
+          <Tabs/>
           <Routes>
             <Route exact path="/" element={
               <div style={{width:'100%', margin: '0px'}}>
                 <div className='card' style={{backgroundColor: 'black'}}>
-                  <GameForms
-                    provider={provider}
-                    coinflip={coinflip}
-                    setIsLoading={setIsLoading}
-                    account={account}
-                    totalGames={totalGames}
-                    games={games}
-                  />
+                  <GameForms/>
                 </div>
               </div>
             }/>

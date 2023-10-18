@@ -1,4 +1,5 @@
-import {useState} from 'react';
+import { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import * as React from 'react';
 import Card from'react-bootstrap/Card';
 import Form from 'react-bootstrap/Form';
@@ -17,12 +18,22 @@ import TOKEN_ABI from '../abis/Token.json';
 
 const NETWORKS = [31337, 5];
 
-const  GameForms = ({provider, coinflip, setIsLoading, account, totalGames, games}) => {
+const  GameForms = () => {
 	const [wager, setWager] = useState(0)
 	const [erc20, setErc20] = useState(false)
 	const [erc20Address, setErc20Address] = useState('')
 	const [cancelId, setCancelId] = useState(0)
 	const [isWaiting, setIsWaiting] = useState(false)
+
+	const provider = useSelector(state => state.provider.connection)
+	const account = useSelector(state => state.provider.account)
+
+	const coinflip = useSelector(state => state.coinflip.contract)
+	const games = useSelector(state => state.coinflip.games)
+	const totalGames = useSelector(state => state.coinflip.totalGames)
+	//const isSwapping = useSelector(state => state.amm.swapping.isSwapping)
+	//const isSuccess = useSelector(state => state.amm.swapping.isSuccess)
+	//const transactionHash = useSelector(state => state.amm.swapping.transactionHash)
 
 	const createGameHandler = async (e) => {
 		e.preventDefault()
@@ -57,7 +68,6 @@ const  GameForms = ({provider, coinflip, setIsLoading, account, totalGames, game
 			window.alert(e.reason)
 		}
 		setIsWaiting(false)
-		setIsLoading(true)
 	}
 
 	const cancelGameHandler = async (e) => {
@@ -71,7 +81,6 @@ const  GameForms = ({provider, coinflip, setIsLoading, account, totalGames, game
 			window.alert(e.reason)
 		}
 		setIsWaiting(false)
-		setIsLoading(true)
 	}
 
 	const erc20BooleanHandler = (e) => {
@@ -93,23 +102,21 @@ const  GameForms = ({provider, coinflip, setIsLoading, account, totalGames, game
 	return(
 		<>	
 		<div style={{maxWidth: '100%', margin: '0px'}}>
-			<Card style={{maxWidth:'450px', backgroundColor: '#aaaaaa', display: 'inline-block', margin: '0px'}} className='mx-auto px-4'>
+			<Card style={{maxWidth:'450px', display: 'inline-block', margin: '0px'}} className='mx-auto px-4'>
 				{account ? (
 					<div>
 						<div style={{margin:'50px', display: 'inline-block'}}>
-							<h2>Create Game</h2>
+							<h2 className='my-2' >Create Game</h2>
 							<Form onSubmit={createGameHandler}>
 								<Form.Group className="text-center" style={{maxWidth:'450px', margin: '5px auto'}}>
 									<Form.Control style={{width:'100%'}} type='number' step='0.0000001' placeholder='Enter wager' className='my-2' onChange={(e) => setWager(e.target.value)}/>
-									<br/>
-									<div>
-										<Form.Control type='checkbox' placeholder='erc20?' className='my-2' onChange={erc20BooleanHandler}/>
-										<Form.Control type='text' placeholder='ERC20 Address' className='my-2' onChange={(e) => setErc20Address(e.target.value)}/>
+									<div style={{display: 'flex'}}>
+										<Form.Control style={{height: '30px', width: '30px'}} type='checkbox' placeholder='erc20?' className='form-check-input my-2' onChange={erc20BooleanHandler}/>
+										<Form.Control style={{height: '30px', width: '200px'}} type='text' placeholder='ERC20 Address' className='my-2' onChange={(e) => setErc20Address(e.target.value)}/>
 									</div>
-									<br/>
 									{isWaiting? (
 										<>
-											<Spinner animation='border'/>
+											<Spinner animation='border' className='my-2' />
 											<p>Loading...</p>
 										</>
 									) : (
@@ -117,24 +124,28 @@ const  GameForms = ({provider, coinflip, setIsLoading, account, totalGames, game
 											<Button
 												variant='primary'
 												type='submit'
+												className='my-2'
 											>
 												Create Game
 											</Button>
-											<br/>
-											<br/>
-											<strong>DEVELOPER TOOLS</strong>
-											<br/>
-											<Button
-												onClick={whitelistHandler}
-											>
-												Whitelist Address
-											</Button>
+											<div style={{display: 'none'}}>
+												<br/>
+												<br/>
+												<strong>DEVELOPER TOOLS</strong>
+												<br/>
+												<Button
+													onClick={whitelistHandler}
+												>
+													Whitelist Address
+												</Button>
+											</div>
 										</>
 									)}					
 								</Form.Group>
 							</Form>
 						</div>
-						<div style={{marginBottom:'50px', display: 'inline-block'}}>
+
+						<div style={{marginBottom:'50px', display: 'none'}}>
 							<h2>Cancel Game</h2>
 							<Form onSubmit={cancelGameHandler}>
 								<Form.Group className="text-center" style={{maxWidth:'450px', margin: '5px auto'}}>
@@ -159,16 +170,9 @@ const  GameForms = ({provider, coinflip, setIsLoading, account, totalGames, game
 				)}
 
 			</Card>
-			<Card style={{backgroundColor: '#aaaaaa', display: 'inline-block', margin: '50px'}} className='mx-auto px-4'>
+			<Card style={{display: 'inline-block', margin: '50px'}} className='mx-auto px-4'>
 				<div className='card'>
-                  <GamesList
-                    provider={provider}
-                    coinflip={coinflip}
-                    totalGames={totalGames}
-                    games={games}
-                    setIsLoading={setIsLoading}
-                   	account={account}
-                  />
+                  <GamesList/>
                 </div>
 			</Card>
 		</div>

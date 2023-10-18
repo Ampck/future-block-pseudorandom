@@ -1,13 +1,19 @@
-import {useState} from 'react';
+import { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import Table from 'react-bootstrap/Table';
 import Button from 'react-bootstrap/Button';
 import {ethers} from 'ethers'
 
 import TOKEN_ABI from '../abis/Token.json';
 
-const GamesList = ({provider, coinflip, totalGames, games, setIsLoading, account}) => {
+const GamesList = () => {
 
-	//console.log(games)
+	const provider = useSelector(state => state.provider.connection)
+	const account = useSelector(state => state.provider.account)
+
+	const coinflip = useSelector(state => state.coinflip.contract)
+	const games = useSelector(state => state.coinflip.games)
+	const totalGames = useSelector(state => state.coinflip.totalGames)
 
 	const acceptHandler = async (id, wager) => {
 
@@ -46,8 +52,6 @@ const GamesList = ({provider, coinflip, totalGames, games, setIsLoading, account
 			window.alert("Challenger can not be creator...")
 
 		}
-		
-		setIsLoading(true)
 
 	}
 
@@ -77,8 +81,6 @@ const GamesList = ({provider, coinflip, totalGames, games, setIsLoading, account
 
 		}
 
-		
-		setIsLoading(true)
 	}
 
 	return (

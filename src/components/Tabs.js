@@ -1,5 +1,6 @@
 import Nav from 'react-bootstrap/Nav';
 import { LinkContainer } from 'react-router-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const Tabs = () => {
 	return(
