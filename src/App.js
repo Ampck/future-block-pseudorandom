@@ -14,7 +14,7 @@ import DeveloperTools from './components/DeveloperTools';
 
 import './App.css';
 
-import { loadProvider, loadAccount, loadNetwork, loadTokens, loadCoinflip, loadBalances } from './store/interactions';
+import { loadProvider, loadAccount, loadNetwork, loadTokens, loadGames, loadCoinflip, loadBalances } from './store/interactions';
 
 import config from './config.json';
 import COINFLIP_ABI from './abis/CoinFlip.json';
@@ -65,12 +65,12 @@ function App() {
     
     const provider = loadProvider(dispatch)
     const chainId = await loadNetwork(provider, dispatch)
+    const coinflip = await loadCoinflip(provider, chainId, dispatch)
+    const games = await loadGames(provider, coinflip, dispatch)
 
     window.ethereum.on('accountsChanged', async () => {
       await loadAccount(dispatch)
     })
-
-    let coinflip = await loadCoinflip(provider, chainId, dispatch)
 
   }
 
@@ -80,23 +80,20 @@ function App() {
 
   return (
     <>
-      <Container className="App">
+      <div className="App">
         <HashRouter>
           <Navigation/>
-          <Tabs/>
           <Routes>
             <Route exact path="/" element={
-              <div style={{width:'100%', margin: '0px'}}>
-                <div className='card' style={{backgroundColor: 'black'}}>
+              <div style={{width:'100%', paddingLeft: '5%', paddingRight: '5%', display: 'inline-block'}} className='d-flex align-items-top justify-content-center'>
+                  <GamesList/>
                   <GameForms/>
-                </div>
               </div>
             }/>
-            <Route exact path="/cancel" element={<CancelGame/>}/>
             <Route exact path="/tools" element={<DeveloperTools/>}/>
           </Routes>
         </HashRouter>
-      </Container>
+      </div>
     </>
   );
 }

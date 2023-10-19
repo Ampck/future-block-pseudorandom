@@ -11,7 +11,7 @@ import Row from 'react-bootstrap/Row';
 import Spinner from 'react-bootstrap/Spinner';
 import {ethers} from 'ethers'
 
-import GamesList from './GamesList';
+import { loadGames } from '../store/interactions';
 
 import config from '../config.json';
 import TOKEN_ABI from '../abis/Token.json';
@@ -19,6 +19,8 @@ import TOKEN_ABI from '../abis/Token.json';
 const NETWORKS = [31337, 5];
 
 const  GameForms = () => {
+	const dispatch = useDispatch()
+
 	const [wager, setWager] = useState(0)
 	const [erc20, setErc20] = useState(false)
 	const [erc20Address, setErc20Address] = useState('')
@@ -67,6 +69,7 @@ const  GameForms = () => {
 		} catch (e) {
 			window.alert(e.reason)
 		}
+		await loadGames(provider, coinflip, dispatch)
 		setIsWaiting(false)
 	}
 
@@ -101,81 +104,76 @@ const  GameForms = () => {
 
 	return(
 		<>	
-		<div style={{maxWidth: '100%', margin: '0px'}}>
-			<Card style={{maxWidth:'450px', display: 'inline-block', margin: '0px'}} className='mx-auto px-4'>
-				{account ? (
-					<div>
-						<div style={{margin:'50px', display: 'inline-block'}}>
-							<h2 className='my-2' >Create Game</h2>
-							<Form onSubmit={createGameHandler}>
-								<Form.Group className="text-center" style={{maxWidth:'450px', margin: '5px auto'}}>
-									<Form.Control style={{width:'100%'}} type='number' step='0.0000001' placeholder='Enter wager' className='my-2' onChange={(e) => setWager(e.target.value)}/>
-									<div style={{display: 'flex'}}>
-										<Form.Control style={{height: '30px', width: '30px'}} type='checkbox' placeholder='erc20?' className='form-check-input my-2' onChange={erc20BooleanHandler}/>
-										<Form.Control style={{height: '30px', width: '200px'}} type='text' placeholder='ERC20 Address' className='my-2' onChange={(e) => setErc20Address(e.target.value)}/>
-									</div>
-									{isWaiting? (
-										<>
-											<Spinner animation='border' className='my-2' />
-											<p>Loading...</p>
-										</>
-									) : (
-										<>
+			<div style={{marginTop: '30px', display: 'inline-block'}}>
+				<Card style={{maxWidth:'450px', minWidth: '450px', display: 'inline-block', margin: '0px'}}>
+					{account ? (
+						<div>
+							<div style={{margin:'50px', display: 'inline-block'}}>
+								<h2 style={{marginBottom: '30px'}}>CREATE GAME</h2>
+								<Form onSubmit={createGameHandler}>
+									<Form.Group className="text-center" style={{maxWidth:'450px', margin: '5px auto'}}>
+										<Form.Control style={{width:'100%'}} type='number' step='0.0000001' placeholder='Enter wager' className='my-2' onChange={(e) => setWager(e.target.value)}/>
+										<div style={{display: 'flex'}}>
+											<Form.Control style={{height: '30px', width: '30px'}} type='checkbox' placeholder='erc20?' className='form-check-input my-2' onChange={erc20BooleanHandler}/>
+											<Form.Control style={{height: '30px', width: '200px'}} type='text' placeholder='ERC20 Address' className='my-2' onChange={(e) => setErc20Address(e.target.value)}/>
+										</div>
+										{isWaiting? (
+											<>
+												<Spinner animation='border' style={{marginTop: '20px'}} />
+												<p>Loading...</p>
+											</>
+										) : (
+											<>
+												<Button
+													variant='primary'
+													type='submit'
+													style={{marginTop: '20px'}}
+												>
+													CREATE GAME
+												</Button>
+												<div style={{display: 'none'}}>
+													<br/>
+													<br/>
+													<strong>DEVELOPER TOOLS</strong>
+													<br/>
+													<Button
+														onClick={whitelistHandler}
+													>
+														Whitelist Address
+													</Button>
+												</div>
+											</>
+										)}					
+									</Form.Group>
+								</Form>
+							</div>
+
+							<div style={{marginBottom:'50px', display: 'none'}}>
+								<h2>Cancel Game</h2>
+								<Form onSubmit={cancelGameHandler}>
+									<Form.Group className="text-center" style={{maxWidth:'450px', margin: '5px auto'}}>
+										<Form.Control type='number' placeholder='Enter game id to cancel' className='my-2' onChange={(e) => setCancelId(e.target.value)}/>
+					
+										{isWaiting? (
+											<Spinner animation='border'/>
+										) : (
 											<Button
 												variant='primary'
 												type='submit'
-												className='my-2'
 											>
-												Create Game
+												Cancel Game
 											</Button>
-											<div style={{display: 'none'}}>
-												<br/>
-												<br/>
-												<strong>DEVELOPER TOOLS</strong>
-												<br/>
-												<Button
-													onClick={whitelistHandler}
-												>
-													Whitelist Address
-												</Button>
-											</div>
-										</>
-									)}					
-								</Form.Group>
-							</Form>
+										)}					
+									</Form.Group>
+								</Form>
+							</div>
 						</div>
+					) : (
+						<p className ='d-flex justify-content-center align-items-center' style={{height: '300px'}}>Connect wallet to use app.</p>
+					)}
 
-						<div style={{marginBottom:'50px', display: 'none'}}>
-							<h2>Cancel Game</h2>
-							<Form onSubmit={cancelGameHandler}>
-								<Form.Group className="text-center" style={{maxWidth:'450px', margin: '5px auto'}}>
-									<Form.Control type='number' placeholder='Enter game id to cancel' className='my-2' onChange={(e) => setCancelId(e.target.value)}/>
-				
-									{isWaiting? (
-										<Spinner animation='border'/>
-									) : (
-										<Button
-											variant='primary'
-											type='submit'
-										>
-											Cancel Game
-										</Button>
-									)}					
-								</Form.Group>
-							</Form>
-						</div>
-					</div>
-				) : (
-					<p className ='d-flex justify-content-center align-items-center' style={{height: '300px'}}>Connect wallet to use app.</p>
-				)}
-
-			</Card>
-			<Card style={{display: 'inline-block', margin: '50px'}} className='mx-auto px-4'>
-				<div className='card'>
-                  <GamesList/>
-                </div>
-			</Card>
-		</div>
+				</Card>
+			</div>
 		</>
 	);
 }

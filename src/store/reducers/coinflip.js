@@ -7,6 +7,8 @@ export const coinflip = createSlice({
     globals: [],
 		stats: [],
 		games: [],
+    gamesSymbols: [],
+    totalGames: 0,
     whitelisted: [],
     creating: {
       isCreating: false,
@@ -41,6 +43,12 @@ export const coinflip = createSlice({
     },
     gamesLoaded: (state, action) => {
       state.games = action.payload
+    },
+    gamesSymbolsLoaded: (state, action) => {
+      state.gamesSymbols = action.payload
+    },
+    totalGamesLoaded: (state, action) => {
+      state.totalGames = action.payload
     },
     createRequest: (state, action) => {
       state.creating.isCreating = true
@@ -92,8 +100,11 @@ export const coinflip = createSlice({
 
 export const {
   setContract,
-  sharesLoaded,
-  swapsLoaded,
+  globalsLoaded,
+  statsLoaded,
+  gamesLoaded,
+  gamesSymbolsLoaded,
+  totalGamesLoaded,
   createRequest,
   createSuccess,
   createFail,

@@ -5,17 +5,12 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 const Tabs = () => {
 	return(
 		<Nav variant='pills' defaultActiveKey='/' className='justify-content-center my-4'>
-			<LinkContainer to='/'>
+			<LinkContainer className='px-3 mx-2' to='/'>
 				<Nav.Link>
 					Games
 				</Nav.Link>
 			</LinkContainer>
-			<LinkContainer to='/cancel'>
-				<Nav.Link>
-					Cancel
-				</Nav.Link>
-			</LinkContainer>
-			<LinkContainer to='/tools'>
+			<LinkContainer className='px-3 mx-2' to='/tools'>
 				<Nav.Link>
 					Tools
 				</Nav.Link>

@@ -6,6 +6,8 @@ import Blockies from 'react-blockies';
 
 import { loadAccount } from '../store/interactions';
 
+import Tabs from './Tabs';
+
 import config from '../config.json'
 import logo from '../logo.png';
 
@@ -29,7 +31,7 @@ const Navigation = () => {
 
   return (
   	<>
-	    <Navbar className='my-3 mx-5' expand='lg'>
+	    <Navbar className='align-contents-center' style={{display: 'flex', backgroundColor: 'white', height: '80px', width: '100%', margin: '0px auto', paddingLeft: '10%', paddingRight: '10%'}} expand='lg'>
 	      <img
 	        alt="logo"
 	        src={logo}
@@ -37,14 +39,17 @@ const Navigation = () => {
 	        height="40"
 	        className="d-inline-block align-top mx-3"
 	      />
-	      <Navbar.Brand href="#">Dapp University AMM</Navbar.Brand>
+	      <Navbar.Brand href="#">TM Casino</Navbar.Brand>
 	      <Navbar.Collapse className="justify-content-end">
-	        <div className="d-flex justify-content-end mt-3">
+	      	<div className='d-flex align-items-center mx-5'>
+		      	<Tabs/>
+		      </div>
+	        <div className="d-flex justify-content-end">
 	          <Form.Select
 	            aria-label="Network Selector"
 	            value={config[chainId] ? `0x${chainId.toString(16)}` : `0`}
 	            onChange={networkHandler}
-	            style={{ maxWidth: '200px', marginRight: '20px' }}
+	            style={{ maxWidth: '175px', minWidth: '125px', marginRight: '20px' }}
 	          >
 	            <option value="0" disabled>Select Network</option>
 	            <option value="0x7A69">Localhost</option>

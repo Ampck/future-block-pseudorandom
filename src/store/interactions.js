@@ -3,8 +3,11 @@ import { setAccount, setProvider, setNetwork } from './reducers/provider'
 import { setContracts, setSymbols, balancesLoaded } from './reducers/tokens'
 import {
 	setContract,
-  sharesLoaded,
-  swapsLoaded,
+  globalsLoaded,
+  statsLoaded,
+  gamesLoaded,
+  gamesSymbolsLoaded,
+  totalGamesLoaded,
   createRequest,
   createSuccess,
   createFail,
@@ -58,6 +61,7 @@ export const loadTokens = async (provider, chainId, dispatch) => {
 
 export const loadCoinflip = async (provider, chainId, dispatch) => {
 	const coinflip = new ethers.Contract(config[chainId].coinflip.address, COINFLIP_ABI, provider)
+	//console.log(coinflip)
 
 	dispatch(setContract(coinflip))
 
@@ -161,3 +165,26 @@ export const loadAllSwaps = async (provider, amm, dispatch) => {
 	
 }
 */
+
+export const loadGames = async (provider, coinflip, dispatch) => {
+	
+	const count = await coinflip.totalGames()
+	dispatch(totalGamesLoaded(count))
+
+  const items = []
+  const symbols = []
+  for (var i = count; i > 0; i--) {
+    let currentGame = await coinflip.games(i)
+    if (currentGame.erc20) {
+    	const token = new ethers.Contract(currentGame.erc20Address, TOKEN_ABI, provider)
+    	symbols.push((await token.symbol()).toString())
+    } else {
+    	symbols.push("- -")
+    }
+    items.push(currentGame)
+  }
+
+  dispatch(gamesLoaded(items))
+  dispatch(gamesSymbolsLoaded(symbols))
+	
+}
