@@ -61,8 +61,8 @@ const Navigation = () => {
 	              <Blockies
 	                seed={account}
 	                size={10}
-	                scale={3}
-	                className="identicon mx-2"
+	                scale={4}
+	                className="identicon roundBlockie mx-2"
 	              />
 	            </Navbar.Text>
 	          ) : (

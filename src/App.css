@@ -1,6 +1,6 @@
 .App {
   background-color: black;
-  height: 1500vh; 
+  min-height: 100vh;
   text-align: center;
 }
 
@@ -28,6 +28,10 @@
 
 .App-link {
   color: #61dafb;
+}
+.roundBlockie {
+  border-radius: 100%;
+  border: 2px solid black;
 }
 
 @keyframes App-logo-spin {

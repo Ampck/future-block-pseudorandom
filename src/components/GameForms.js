@@ -104,7 +104,7 @@ const  GameForms = () => {
 
 	return(
 		<>	
-			<div style={{marginTop: '30px', display: 'inline-block'}}>
+			<div style={{marginTop: '30px', marginBottom: '30px', display: 'inline-block'}}>
 				<Card style={{maxWidth:'450px', minWidth: '450px', display: 'inline-block', margin: '0px'}}>
 					{account ? (
 						<div>
