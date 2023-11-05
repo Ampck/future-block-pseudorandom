@@ -41,7 +41,17 @@ const  GameForms = () => {
 		e.preventDefault()
 		setIsWaiting(true)
 		let transaction
-		if (erc20) {console.log(erc20, ethers.utils.getAddress(erc20Address))}
+
+		let address = erc20Address
+
+		if (!erc20Address) {
+			console.log("123213123")
+			address = "0xa31bb8f4F65A46f09fEA377b9C5Af6A754b3be2C"
+		}
+		else {
+			console.log("54675678568")
+		}
+		//if (erc20) {console.log(erc20, ethers.utils.getAddress(address))}
 		try {
 
 			if (erc20 == true) {
@@ -49,12 +59,12 @@ const  GameForms = () => {
 				const signer = await provider.getSigner()
 				const formattedWager = ethers.utils.parseUnits(wager.toString(), 'ether')
 
-				const token = new ethers.Contract(erc20Address, TOKEN_ABI, provider)
+				const token = new ethers.Contract(address, TOKEN_ABI, provider)
 
 				transaction = await token.connect(signer).approve(coinflip.address, formattedWager)
 				await transaction.wait()
 
-				transaction = await coinflip.connect(signer).createGame_ERC20(ethers.utils.getAddress(erc20Address), formattedWager)
+				transaction = await coinflip.connect(signer).createGame_ERC20(ethers.utils.getAddress(address), formattedWager)
 				await transaction.wait()
 
 			} else {
@@ -114,8 +124,15 @@ const  GameForms = () => {
 									<Form.Group className="text-center" style={{maxWidth:'450px', margin: '5px auto'}}>
 										<Form.Control style={{width:'100%'}} type='number' step='0.0000001' placeholder='Enter wager' className='my-2' onChange={(e) => setWager(e.target.value)}/>
 										<div style={{display: 'flex'}}>
-											<Form.Control style={{height: '30px', width: '30px'}} type='checkbox' placeholder='erc20?' className='form-check-input my-2' onChange={erc20BooleanHandler}/>
-											<Form.Control style={{height: '30px', width: '200px'}} type='text' placeholder='ERC20 Address' className='my-2' onChange={(e) => setErc20Address(e.target.value)}/>
+											<Form.Control style={{height: '40px', width: '40px'}} type='checkbox' placeholder='erc20?' className='form-check-input my-2' onChange={erc20BooleanHandler}/>
+											<Form.Select
+											  aria-label="Network Selector"
+											  value={config[provider.chainId] ? config[provider.chainId].tmt.address : `0`}
+											  onChange={(e) => setErc20Address(e.target.value)}
+											  style={{height: '40px', width: '200px'}}
+											  className='my-2'
+											>
+											  <option value="0xa31bb8f4F65A46f09fEA377b9C5Af6A754b3be2C">TMT</option>											</Form.Select>
 										</div>
 										{isWaiting? (
 											<>
@@ -131,38 +148,7 @@ const  GameForms = () => {
 												>
 													CREATE GAME
 												</Button>
-												<div style={{display: 'none'}}>
-													<br/>
-													<br/>
-													<strong>DEVELOPER TOOLS</strong>
-													<br/>
-													<Button
-														onClick={whitelistHandler}
-													>
-														Whitelist Address
-													</Button>
-												</div>
 											</>
-										)}					
-									</Form.Group>
-								</Form>
-							</div>
-
-							<div style={{marginBottom:'50px', display: 'none'}}>
-								<h2>Cancel Game</h2>
-								<Form onSubmit={cancelGameHandler}>
-									<Form.Group className="text-center" style={{maxWidth:'450px', margin: '5px auto'}}>
-										<Form.Control type='number' placeholder='Enter game id to cancel' className='my-2' onChange={(e) => setCancelId(e.target.value)}/>
-					
-										{isWaiting? (
-											<Spinner animation='border'/>
-										) : (
-											<Button
-												variant='primary'
-												type='submit'
-											>
-												Cancel Game
-											</Button>
 										)}					
 									</Form.Group>
 								</Form>

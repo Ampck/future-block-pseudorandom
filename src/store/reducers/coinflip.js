@@ -50,6 +50,9 @@ export const coinflip = createSlice({
     totalGamesLoaded: (state, action) => {
       state.totalGames = action.payload
     },
+    whitelistedLoaded: (state, action) => {
+      state.whitelisted = action.payload
+    },
     createRequest: (state, action) => {
       state.creating.isCreating = true
       state.creatingcreating.isSuccess = false
@@ -105,6 +108,7 @@ export const {
   gamesLoaded,
   gamesSymbolsLoaded,
   totalGamesLoaded,
+  whitelistedLoaded,
   createRequest,
   createSuccess,
   createFail,

@@ -177,7 +177,7 @@ const GamesList = () => {
 							      				style={{width:'100%', backgroundColor: '#10bf00', border: 'none'}}
 							      				onClick={() => acceptHandler(game.id, game.wager)}
 							      			>
-							      				ACCEPT GAME
+							      				ACCEPT
 							      			</Button>
 							      		)}
 							      		{(game.status == 2) && (

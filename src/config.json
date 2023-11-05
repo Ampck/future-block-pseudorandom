@@ -7,6 +7,9 @@
   "5": {
     "coinflip": {
       "address": "0xB7aF61bc14714b43de9EBb1bA6DFA363a588d667"
+    },
+    "tmt": {
+      "address": "0xa31bb8f4F65A46f09fEA377b9C5Af6A754b3be2C"
     }
   }
 }

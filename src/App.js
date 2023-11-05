@@ -65,8 +65,11 @@ function App() {
     
     const provider = loadProvider(dispatch)
     const chainId = await loadNetwork(provider, dispatch)
-    const coinflip = await loadCoinflip(provider, chainId, dispatch)
-    const games = await loadGames(provider, coinflip, dispatch)
+
+    if (window.ethereum) {
+      const coinflip = await loadCoinflip(provider, chainId, dispatch)
+      const games = await loadGames(provider, coinflip, dispatch)
+    }
 
     window.ethereum.on('accountsChanged', async () => {
       await loadAccount(dispatch)
