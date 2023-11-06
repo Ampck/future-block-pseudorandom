@@ -1,3 +1,7 @@
+Frontend: https://flat-base-8565.on.fleek.co/#/
+
+Explanation Video: https://youtu.be/f6nAjYVHVis
+
 # Future Block Pseudorandom
 
 This project includes a pseudorandom number generator compatible with all EVM blockchains.
