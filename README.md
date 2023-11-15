@@ -3,7 +3,9 @@ Frontend: https://flat-base-8565.on.fleek.co/#/
 Explanation Video: https://youtu.be/f6nAjYVHVis
 
 Goerli Contract Addresses:
+
 CoinFlip	`0xB7aF61bc14714b43de9EBb1bA6DFA363a588d667`
+
 TM Token	`0xa31bb8f4F65A46f09fEA377b9C5Af6A754b3be2C`
 
 
