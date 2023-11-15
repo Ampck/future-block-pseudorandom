@@ -2,7 +2,7 @@ Frontend: https://flat-base-8565.on.fleek.co/#/
 
 Explanation Video: https://youtu.be/f6nAjYVHVis
 
-# Goerli Contract Addresses:
+# Goerli Contract Addresses
 
 CoinFlip	`0xB7aF61bc14714b43de9EBb1bA6DFA363a588d667`
 
