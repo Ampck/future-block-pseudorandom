@@ -93,7 +93,6 @@ const GamesList = () => {
 	}
 
 	const cancelGameHandler = async (e) => {
-		e.preventDefault()
 		try {
 			const signer = await provider.getSigner()
 			const transaction = await coinflip.connect(signer).cancelGame(e)
@@ -166,7 +165,7 @@ const GamesList = () => {
 							      			<Button 
 							      				variant="primary"
 							      				style={{width:'100%', backgroundColor: '#ff8000', border: 'none'}}
-							      				onClick={() => finalizeHandler(game.id)}
+							      				onClick={() => cancelGameHandler(game.id)}
 							      			>
 							      				CANCEL
 							      			</Button>

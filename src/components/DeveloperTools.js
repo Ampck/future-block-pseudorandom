@@ -125,8 +125,9 @@ const  GameForms = () => {
 													type='submit'
 													style={{marginTop: '20px'}}
 												>
-													WHITELIST ERC20 ADDRESSS
+													WHITELIST ERC20 ADDRESS
 												</Button>
+												<br/>ADMIN ONLY
 											</>
 										)}					
 									</Form.Group>
